@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 
 	pb "github.com/nawafswe/orders-service/orders/proto"
@@ -28,9 +26,5 @@ func main() {
 	defer conn.Close()
 
 	c := pb.NewOrderServiceClient(conn)
-
-	res, _ := c.Create(context.Background(), &pb.Order{})
-
-	fmt.Printf("Server res: ==> %v \n", res)
-
+	createOrder(c)
 }
