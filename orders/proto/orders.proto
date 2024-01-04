@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package orders;
+
+option go_package = "github.com/nawafswe/orders-service/orders/proto";
+import "google/protobuf/empty.proto";
+
+import "order.proto";
+
+service OrderService { 
+    rpc Create(Order) returns (Order);
+    rpc ChangeOrderStatus(OrderStatus) returns (google.protobuf.Empty);
+}
+

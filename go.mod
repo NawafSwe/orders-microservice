@@ -1,4 +1,4 @@
-module github.com/nawafswe/orders-microservice
+module github.com/nawafswe/orders-service
 
 go 1.21.1
 
