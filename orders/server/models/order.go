@@ -4,8 +4,8 @@ import "gorm.io/gorm"
 
 type Order struct {
 	gorm.Model
-	OrderId    int64 `gorm:"uniqueIndex"`
-	CustomerId string
+	OrderId    int64 `gorm:"uniqueIndex;autoIncrement"`
+	CustomerId int64
 	Status     string
 	GrandTotal float64
 	Items      []OrderedItem `gorm:"foreignKey:ItemId"` // one to many
