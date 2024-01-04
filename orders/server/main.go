@@ -1,18 +1,24 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net"
 
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"gorm.io/gorm"
 )
 
-var addr = "localhost:9000"
+var (
+	port = flag.Int("port", 9000, "gRPC server port")
+)
 
 type Server struct {
 	pb.OrderServiceServer
+	DB *gorm.DB
 }
 
 func main() {
@@ -26,16 +32,22 @@ func main() {
 	srvOpts := []grpc.ServerOption{}
 	srvOpts = append(srvOpts, grpc.Creds(cred))
 
-	lis, err := net.Listen("tcp", addr)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
-		log.Fatalf("failed to listen on addr:%v\n", addr)
+		log.Fatalf("failed to listen on addr:%v\n", lis.Addr())
 	}
-	log.Printf("Server listening on addr: %v\n", addr)
 
 	s := grpc.NewServer(srvOpts...)
 	// register server info, including services from proto buff
-	pb.RegisterOrderServiceServer(s, &Server{})
+	srv := &Server{}
+	pb.RegisterOrderServiceServer(s, srv)
+	db, err := initDB()
+	if err != nil {
+		log.Fatalf("failed connecting to the db, err:%v\n", err)
+	}
+	srv.DB = db
 
+	log.Printf("Server listening at %v", lis.Addr())
 	// start serving requests
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)
