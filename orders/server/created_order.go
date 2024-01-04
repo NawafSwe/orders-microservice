@@ -15,12 +15,12 @@ import (
 func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 
 	fmt.Printf("OrderService was invoked with Create method, with ctx: %v, in:%v\n", ctx, in)
-	createdOrder := &models.Order{
+	createdOrder := models.Order{
 		CustomerId: in.CustomerId,
 		GrandTotal: in.GrandTotal,
 		Status:     "new",
 	}
-	tx := s.DB.WithContext(ctx).Create(createdOrder)
+	tx := s.DB.WithContext(ctx).Create(&createdOrder)
 
 	if tx.Error != nil {
 		return nil, status.Errorf(codes.Internal, "failed to commit order, err: %v", tx.Error)
@@ -29,9 +29,9 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 		log.Printf("Created order ===> %v\n", createdOrder)
 		log.Printf("order id  ===> %v\n", createdOrder.OrderId)
 		// create items
-		createdItems := []*models.OrderedItem{}
+		createdItems := []models.OrderedItem{}
 		for _, item := range in.Items {
-			createdItems = append(createdItems, &models.OrderedItem{
+			createdItems = append(createdItems, models.OrderedItem{
 				OrderedQuantity: item.OrderedQuantity,
 				Price:           item.Price,
 				Sku:             item.Sku,
