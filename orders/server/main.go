@@ -4,11 +4,16 @@ import (
 	"log"
 	"net"
 
+	pb "github.com/nawafswe/orders-service/orders/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
 var addr = "localhost:9000"
+
+type Server struct {
+	pb.OrderServiceServer
+}
 
 func main() {
 
@@ -29,6 +34,9 @@ func main() {
 
 	s := grpc.NewServer(srvOpts...)
 	// register server info, including services from proto buff
+	pb.RegisterOrderServiceServer(s, &Server{})
+
+	// start serving requests
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)
 	}
