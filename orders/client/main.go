@@ -21,11 +21,11 @@ func main() {
 	copts = append(copts, grpc.WithTransportCredentials(cred))
 	addr := "localhost:9000"
 	conn, err := grpc.Dial(addr, copts...)
-
 	if err != nil {
-
 		log.Fatalf("failed to connect to addr: %v, err: %v \n", addr, err)
 	}
+
+	defer conn.Close()
 
 	c := pb.NewOrderServiceClient(conn)
 
