@@ -8,6 +8,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// type DataStore interface {
+// }
+
+// type GormDB struct {
+// 	DataStore
+// 	DB *gorm.DB
+// }
+
 func initDB() (*gorm.DB, error) {
 	host := "localhost"
 	port := "5432"

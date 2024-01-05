@@ -15,7 +15,7 @@ func changeOrderStatus(c pb.OrderServiceClient) {
 
 	_, err := c.ChangeOrderStatus(ctx, &pb.OrderStatus{
 		OrderId: 3,
-		Status:  "Confirmed",
+		Status:  "Under-Preparation",
 	})
 
 	if err != nil {
