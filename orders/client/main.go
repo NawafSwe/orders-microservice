@@ -26,5 +26,6 @@ func main() {
 	defer conn.Close()
 
 	c := pb.NewOrderServiceClient(conn)
-	createOrder(c)
+	// createOrder(c)
+	changeOrderStatus(c)
 }

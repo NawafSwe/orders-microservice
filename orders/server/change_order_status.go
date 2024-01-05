@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	"github.com/nawafswe/orders-service/orders/server/models"
@@ -12,9 +13,9 @@ import (
 )
 
 func (s *Server) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*emptypb.Empty, error) {
-
+	log.Printf("ChangeOrderStatus was invoked with in: %v\n", in)
 	var order models.Order
-	tx := s.DB.WithContext(ctx).Find(&order, "order_id = ?", in.OrderId).Update("status", in.Status)
+	tx := s.DB.WithContext(ctx).Model(&order).Where("order_id=?", in.OrderId).Updates(models.Order{Status: in.Status})
 
 	if tx.RowsAffected == 0 {
 		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("order with id: %v, not found", in.OrderId))
