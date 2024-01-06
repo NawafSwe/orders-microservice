@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/joho/godotenv"
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -22,7 +23,7 @@ type Server struct {
 }
 
 func main() {
-
+	err := godotenv.Load(".env")
 	cred, err := credentials.NewServerTLSFromFile("ssl/server.crt", "ssl/server.pem")
 
 	if err != nil {

@@ -3,6 +3,7 @@ module github.com/nawafswe/orders-service
 go 1.21.1
 
 require (
+	github.com/joho/godotenv v1.5.1
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.31.0
 	gorm.io/driver/postgres v1.5.4
