@@ -6,7 +6,6 @@ import (
 	"log"
 	"net"
 
-	"cloud.google.com/go/pubsub"
 	"github.com/joho/godotenv"
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	"google.golang.org/grpc"
@@ -21,7 +20,7 @@ var (
 type Server struct {
 	pb.OrderServiceServer
 	DB     *gorm.DB
-	PUBSUB *pubsub.Client
+	PUBSUB PUBSUB
 }
 
 func main() {
@@ -56,15 +55,15 @@ func main() {
 	srv.DB = db
 
 	// generate pub sub client
-	client, err := GetPubSubClient()
+	client, err := CreatePubSubClient()
 	if err != nil {
 		log.Fatalf("failed to connect to pub sub")
 	}
 	defer client.Close()
-	srv.PUBSUB = client
+	srv.PUBSUB = PUBSUB{client: client}
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
-	createSub("order_status_update_notification", client, client.Topic("order_status_update"))
+	srv.PUBSUB.createTopic("order_status_update")
 	// start serving requests
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)

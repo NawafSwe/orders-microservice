@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/joho/godotenv"
 	pb "github.com/nawafswe/orders-service/orders/proto"
@@ -34,5 +33,5 @@ func main() {
 	c := pb.NewOrderServiceClient(conn)
 	// createOrder(c)
 	changeOrderStatus(c)
-	pullMsgs("order_status_update_notification", os.Getenv("GOOGLE_PROJECT_ID"))
+	// pullMsgs("order_status_update_notification", os.Getenv("GOOGLE_PROJECT_ID"))
 }
