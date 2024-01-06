@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/nawafswe/orders-service/orders/server/models"
 	"gorm.io/driver/postgres"
@@ -17,11 +18,11 @@ import (
 // }
 
 func initDB() (*gorm.DB, error) {
-	host := "localhost"
-	port := "5432"
-	dbName := "orders"
-	dbUser := "orders_admin"
-	password := "fish0r3$fkds"
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+	dbUser := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASS")
 	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		host,
 		port,
