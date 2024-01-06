@@ -40,9 +40,10 @@ func (s *Server) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*em
 		Attributes: map[string]string{"publisher": "orders-service"},
 	})
 
-	if _, err := pr.Get(ctx); err != nil {
-		log.Fatalf("failed to publish a message, err:%v\n", err)
-	}
+	// Get will be a blocking call, it will waits till it gets the confirmation if it was published or not
+	// if _, err := pr.Get(ctx); err != nil {
+	// 	log.Fatalf("failed to publish a message, err:%v\n", err)
+	// }
 	log.Printf("publish result is: %v\n", pr)
 	return &emptypb.Empty{}, nil
 
