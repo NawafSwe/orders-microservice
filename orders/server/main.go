@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/joho/godotenv"
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	"google.golang.org/grpc"
@@ -19,11 +20,17 @@ var (
 
 type Server struct {
 	pb.OrderServiceServer
-	DB *gorm.DB
+	DB     *gorm.DB
+	PUBSUB *pubsub.Client
 }
 
 func main() {
 	err := godotenv.Load(".env")
+
+	if err != nil {
+		panic(err)
+	}
+
 	cred, err := credentials.NewServerTLSFromFile("ssl/server.crt", "ssl/server.pem")
 
 	if err != nil {
@@ -48,6 +55,13 @@ func main() {
 	}
 	srv.DB = db
 
+	// generate pub sub client
+	client, err := GetPubSubClient()
+	if err != nil {
+		log.Fatalf("failed to connect to pub sub")
+	}
+	srv.PUBSUB = client
+	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
 	// start serving requests
 	if err := s.Serve(lis); err != nil {
