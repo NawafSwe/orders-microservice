@@ -10,7 +10,7 @@ import (
 
 func changeOrderStatus(c pb.OrderServiceClient) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	_, err := c.ChangeOrderStatus(ctx, &pb.OrderStatus{

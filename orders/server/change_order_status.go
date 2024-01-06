@@ -5,18 +5,23 @@ import (
 	"fmt"
 	"log"
 
+	"cloud.google.com/go/pubsub"
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	domain "github.com/nawafswe/orders-service/orders/server/domain/services"
 	"github.com/nawafswe/orders-service/orders/server/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *Server) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*emptypb.Empty, error) {
 	log.Printf("ChangeOrderStatus was invoked with in: %v\n", in)
-
-	err := domain.ChangeOrderStatus(ctx, models.Order{
+	msg, err := proto.Marshal(in)
+	if err != nil {
+		log.Fatalf("failed to marshal proto message")
+	}
+	err = domain.ChangeOrderStatus(ctx, models.Order{
 		OrderId: in.OrderId,
 		Status:  in.Status,
 	}, s.DB)
@@ -25,6 +30,20 @@ func (s *Server) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*em
 		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("order with id: %v, not found", in.OrderId))
 	}
 
+	t := s.PUBSUB.Topic("order_status_update")
+	if val, _ := t.Exists(ctx); !val {
+		log.Println("topic does not exist, going to create one...")
+		t, _ = s.PUBSUB.CreateTopic(ctx, "order_status_update")
+	}
+	pr := t.Publish(ctx, &pubsub.Message{
+		Data:       msg,
+		Attributes: map[string]string{"publisher": "orders-service"},
+	})
+
+	if _, err := pr.Get(ctx); err != nil {
+		log.Fatalf("failed to publish a message, err:%v\n", err)
+	}
+	log.Printf("publish result is: %v\n", pr)
 	return &emptypb.Empty{}, nil
 
 }
