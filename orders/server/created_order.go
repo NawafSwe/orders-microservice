@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nawafswe/orders-service/orders/server/models"
+	"github.com/nawafswe/orders-service/orders/server/internal/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -27,7 +27,7 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 	}
 	if tx.RowsAffected > 0 {
 		log.Printf("Created order ===> %v\n", createdOrder)
-		log.Printf("order id  ===> %v\n", createdOrder.OrderId)
+		log.Printf("order id  ===> %v\n", createdOrder.ID)
 		// create items
 		createdItems := []models.OrderedItem{}
 		for _, item := range in.Items {
@@ -35,7 +35,7 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 				OrderedQuantity: item.OrderedQuantity,
 				Price:           item.Price,
 				Sku:             item.Sku,
-				OrderID:         uint(createdOrder.OrderId),
+				OrderID:         uint(createdOrder.ID),
 			})
 		}
 		log.Printf("createdItems ===> %v \n", createdItems)
@@ -48,14 +48,14 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 		preparedItems := []*pb.OrderedItem{}
 		for _, item := range createdItems {
 			preparedItems = append(preparedItems, &pb.OrderedItem{
-				ItemId:          item.ItemId,
+				ItemId:          int64(item.ID),
 				OrderedQuantity: item.OrderedQuantity,
 				Price:           item.Price,
 				Sku:             item.Sku,
 			})
 		}
 		return &pb.Order{
-			OrderId:    createdOrder.OrderId,
+			OrderId:    int64(createdOrder.ID),
 			Items:      preparedItems,
 			GrandTotal: createdOrder.GrandTotal,
 			Status:     createdOrder.Status,

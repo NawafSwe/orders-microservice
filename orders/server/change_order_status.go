@@ -8,7 +8,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	domain "github.com/nawafswe/orders-service/orders/server/domain/services"
-	"github.com/nawafswe/orders-service/orders/server/models"
+	"github.com/nawafswe/orders-service/orders/server/internal/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -21,9 +21,8 @@ func (s *Server) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*em
 	if err != nil {
 		log.Fatalf("failed to marshal proto message")
 	}
-	err = domain.ChangeOrderStatus(ctx, models.Order{
-		OrderId: in.OrderId,
-		Status:  in.Status,
+	err = domain.ChangeOrderStatus(ctx, in.OrderId, models.Order{
+		Status: in.Status,
 	}, s.DB)
 
 	if err != nil {

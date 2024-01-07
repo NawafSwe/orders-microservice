@@ -7,5 +7,5 @@ type OrderedItem struct {
 	OrderedQuantity int32
 	Sku             string
 	Price           float64
-	OrderID         uint `gorm:"column:id"` // Foreign key to the Order model
+	OrderID         uint `gorm:"column:order_id"` // Foreign key to the Order model
 }

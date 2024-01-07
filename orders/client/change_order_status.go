@@ -14,7 +14,7 @@ func changeOrderStatus(c pb.OrderServiceClient) {
 	defer cancel()
 
 	_, err := c.ChangeOrderStatus(ctx, &pb.OrderStatus{
-		OrderId: 3,
+		OrderId: 1,
 		Status:  "Under-Preparation",
 	})
 

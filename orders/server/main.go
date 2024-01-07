@@ -8,6 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	pb "github.com/nawafswe/orders-service/orders/proto"
+	"github.com/nawafswe/orders-service/orders/server/internal/db"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"gorm.io/gorm"
@@ -48,7 +49,7 @@ func main() {
 	// register server info, including services from proto buff
 	srv := &Server{}
 	pb.RegisterOrderServiceServer(s, srv)
-	db, err := initDB()
+	db, err := db.InitDB()
 	if err != nil {
 		log.Fatalf("failed connecting to the db, err:%v\n", err)
 	}

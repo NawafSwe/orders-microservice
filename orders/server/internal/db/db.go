@@ -1,23 +1,15 @@
-package main
+package db
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/nawafswe/orders-service/orders/server/models"
+	"github.com/nawafswe/orders-service/orders/server/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// type DataStore interface {
-// }
-
-// type GormDB struct {
-// 	DataStore
-// 	DB *gorm.DB
-// }
-
-func initDB() (*gorm.DB, error) {
+func InitDB() (*gorm.DB, error) {
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
