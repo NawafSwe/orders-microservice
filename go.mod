@@ -4,6 +4,7 @@ go 1.21.1
 
 require (
 	cloud.google.com/go/pubsub v1.33.0
+	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.5.1
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.31.0

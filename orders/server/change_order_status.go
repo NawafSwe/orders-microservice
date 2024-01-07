@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/google/uuid"
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	domain "github.com/nawafswe/orders-service/orders/server/domain/services"
 	"github.com/nawafswe/orders-service/orders/server/internal/models"
@@ -34,16 +35,18 @@ func (s *Server) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*em
 		log.Println("topic does not exist, going to create one...")
 		t, _ = s.PUBSUB.Client.CreateTopic(ctx, "order_status_update")
 	}
-	pr := t.Publish(ctx, &pubsub.Message{
+	// putting a correlation_id, and deal with it as a saga and pass it down to other microservices.
+
+	t.Publish(ctx, &pubsub.Message{
 		Data:       msg,
-		Attributes: map[string]string{"publisher": "orders-service"},
+		Attributes: map[string]string{"publisher": "orders-service", "correlation_id": uuid.New().String()},
 	})
 
 	// Get will be a blocking call, it will waits till it gets the confirmation if it was published or not
 	// if _, err := pr.Get(ctx); err != nil {
 	// 	log.Fatalf("failed to publish a message, err:%v\n", err)
 	// }
-	log.Printf("publish result is: %v\n", pr)
+
 	return &emptypb.Empty{}, nil
 
 }
