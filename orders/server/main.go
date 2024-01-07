@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	pb "github.com/nawafswe/orders-service/orders/proto"
 	"github.com/nawafswe/orders-service/orders/server/internal/db"
+	"github.com/nawafswe/orders-service/orders/server/pkg/messaging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"gorm.io/gorm"
@@ -21,7 +22,7 @@ var (
 type Server struct {
 	pb.OrderServiceServer
 	DB     *gorm.DB
-	PUBSUB PUBSUB
+	PUBSUB messaging.PUBSUB
 }
 
 func main() {
@@ -56,15 +57,15 @@ func main() {
 	srv.DB = db
 
 	// generate pub sub client
-	client, err := CreatePubSubClient()
+	client, err := messaging.CreatePubSubClient()
 	if err != nil {
 		log.Fatalf("failed to connect to pub sub")
 	}
 	defer client.Close()
-	srv.PUBSUB = PUBSUB{client: client}
+	srv.PUBSUB = messaging.PUBSUB{Client: client}
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
-	srv.PUBSUB.createTopic("order_status_update")
+	srv.PUBSUB.CreateTopic("order_status_update")
 	// start serving requests
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)

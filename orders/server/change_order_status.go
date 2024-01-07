@@ -29,10 +29,10 @@ func (s *Server) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*em
 		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("order with id: %v, not found", in.OrderId))
 	}
 
-	t := s.PUBSUB.client.Topic("order_status_update")
+	t := s.PUBSUB.Client.Topic("order_status_update")
 	if val, _ := t.Exists(ctx); !val {
 		log.Println("topic does not exist, going to create one...")
-		t, _ = s.PUBSUB.client.CreateTopic(ctx, "order_status_update")
+		t, _ = s.PUBSUB.Client.CreateTopic(ctx, "order_status_update")
 	}
 	pr := t.Publish(ctx, &pubsub.Message{
 		Data:       msg,

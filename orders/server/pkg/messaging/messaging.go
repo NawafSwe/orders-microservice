@@ -1,4 +1,4 @@
-package main
+package messaging
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 type PUBSUB struct {
-	client *pubsub.Client
+	Client *pubsub.Client
 }
 
 func CreatePubSubClient() (*pubsub.Client, error) {
@@ -25,7 +25,7 @@ func (p PUBSUB) createSub(subId string, c *pubsub.Client, t *pubsub.Topic) {
 	defer cancel()
 
 	log.Printf("going to create sub\n")
-	sub, err := p.client.CreateSubscription(ctx, subId, pubsub.SubscriptionConfig{
+	sub, err := p.Client.CreateSubscription(ctx, subId, pubsub.SubscriptionConfig{
 		Topic: t,
 	})
 
@@ -42,12 +42,12 @@ func (p PUBSUB) createSub(subId string, c *pubsub.Client, t *pubsub.Topic) {
 
 }
 
-func (p PUBSUB) createTopic(topic string) {
+func (p PUBSUB) CreateTopic(topic string) {
 
-	t := p.client.Topic(topic)
+	t := p.Client.Topic(topic)
 	if val, _ := t.Exists(context.Background()); !val {
 
-		_, err := p.client.CreateTopic(context.Background(), topic)
+		_, err := p.Client.CreateTopic(context.Background(), topic)
 		if err != nil {
 			log.Fatalf("failed to create topic: %v, err: %v\n", topic, err)
 		}
@@ -58,10 +58,10 @@ func (p PUBSUB) createTopic(topic string) {
 
 }
 
-func (p PUBSUB) createTopicWithSchema(topic string, tc pubsub.TopicConfig) {
-	t := p.client.Topic(topic)
+func (p PUBSUB) CreateTopicWithSchema(topic string, tc pubsub.TopicConfig) {
+	t := p.Client.Topic(topic)
 	if val, _ := t.Exists(context.Background()); !val {
-		_, err := p.client.CreateTopicWithConfig(context.Background(), topic, &tc)
+		_, err := p.Client.CreateTopicWithConfig(context.Background(), topic, &tc)
 		if err != nil {
 			log.Fatalf("failed to create topic: %v, err: %v\n", topic, err)
 		}
