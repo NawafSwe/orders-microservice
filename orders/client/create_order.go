@@ -23,7 +23,7 @@ func createOrder(c pb.OrderServiceClient) {
 		Status:     "New",
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 	res, err := c.Create(ctx, req)
 

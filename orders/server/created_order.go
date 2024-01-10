@@ -81,17 +81,19 @@ func publishOrderCreatedEvent(ctx context.Context, s *Server, data proto.Message
 	} else if !b {
 		log.Printf("failed to publish for topic %v, due to topic does not exist\n", orderCreatedTopic)
 	} else {
-		result := t.Publish(ctx, &pubsub.Message{
+		t.Publish(ctx, &pubsub.Message{
 			Data: msg,
 		})
 
-		go func(result *pubsub.PublishResult) {
-			id, err := result.Get(ctx)
-
-			if err != nil {
-				log.Printf("failed to publish order created event, err: %v\n", err)
-			}
-			log.Printf("successfully published orderCreatedEvent, msg id: %v", id)
-		}(result)
+		//go func(result *pubsub.PublishResult) {
+		//	ctx, cancel := context.WithCancel(context.Background())
+		//	defer cancel()
+		//	id, err := result.Get(ctx)
+		//
+		//	if err != nil {
+		//		log.Printf("failed to publish order created event, err: %v\n", err)
+		//	}
+		//	log.Printf("successfully published orderCreatedEvent, msg id: %v", id)
+		//}(result)
 	}
 }
