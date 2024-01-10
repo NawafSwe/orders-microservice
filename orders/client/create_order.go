@@ -11,6 +11,7 @@ import (
 func createOrder(c pb.OrderServiceClient) {
 	items := []*pb.OrderedItem{
 		{
+			ItemId:          int64(9),
 			OrderedQuantity: 1,
 			Price:           45.00,
 			Sku:             "XYZ123456",
