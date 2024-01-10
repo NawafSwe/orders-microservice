@@ -31,7 +31,6 @@ func main() {
 	defer conn.Close()
 
 	c := pb.NewOrderServiceClient(conn)
-	// createOrder(c)
-	changeOrderStatus(c)
-	// pullMsgs("order_status_update_notification", os.Getenv("GOOGLE_PROJECT_ID"))
+	createOrder(c)
+	// changeOrderStatus(c)
 }

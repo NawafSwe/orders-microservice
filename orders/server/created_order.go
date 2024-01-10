@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"log"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/nawafswe/orders-service/orders/server/internal/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/nawafswe/orders-service/orders/proto"
 )
 
 func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
-
 	fmt.Printf("OrderService was invoked with Create method, with ctx: %v, in:%v\n", ctx, in)
 	createdOrder := models.Order{
 		CustomerId: in.CustomerId,
@@ -29,13 +30,13 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 		log.Printf("Created order ===> %v\n", createdOrder)
 		log.Printf("order id  ===> %v\n", createdOrder.ID)
 		// create items
-		createdItems := []models.OrderedItem{}
+		var createdItems []models.OrderedItem
 		for _, item := range in.Items {
 			createdItems = append(createdItems, models.OrderedItem{
 				OrderedQuantity: item.OrderedQuantity,
 				Price:           item.Price,
 				Sku:             item.Sku,
-				OrderID:         uint(createdOrder.ID),
+				OrderID:         createdOrder.ID,
 			})
 		}
 		log.Printf("createdItems ===> %v \n", createdItems)
@@ -45,7 +46,7 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 			tx.Rollback()
 			return nil, status.Errorf(codes.Internal, "failed to create items of order, err: %v", err)
 		}
-		preparedItems := []*pb.OrderedItem{}
+		var preparedItems []*pb.OrderedItem
 		for _, item := range createdItems {
 			preparedItems = append(preparedItems, &pb.OrderedItem{
 				ItemId:          int64(item.ID),
@@ -54,14 +55,43 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 				Sku:             item.Sku,
 			})
 		}
-		return &pb.Order{
+		pbOrder := &pb.Order{
 			OrderId:    int64(createdOrder.ID),
 			Items:      preparedItems,
 			GrandTotal: createdOrder.GrandTotal,
 			Status:     createdOrder.Status,
 			CustomerId: createdOrder.CustomerId,
-		}, nil
+		}
+		publishOrderCreatedEvent(ctx, s, pbOrder.ProtoReflect().Interface())
+		return pbOrder, nil
 	}
 	return nil, status.Error(codes.Internal, "could not complete the operation")
 
+}
+
+func publishOrderCreatedEvent(ctx context.Context, s *Server, data proto.Message) {
+	msg, err := proto.Marshal(data)
+	if err != nil {
+		log.Fatalf("failed to marshal proto message")
+	}
+	orderCreatedTopic := "orderCreated"
+	t := s.PUBSUB.Client.Topic(orderCreatedTopic)
+	if b, err := t.Exists(ctx); err != nil {
+		log.Printf("failed to publish for topic: %v, err: %v\n", orderCreatedTopic, err)
+	} else if !b {
+		log.Printf("failed to publish for topic %v, due to topic does not exist\n", orderCreatedTopic)
+	} else {
+		result := t.Publish(ctx, &pubsub.Message{
+			Data: msg,
+		})
+
+		go func(result *pubsub.PublishResult) {
+			id, err := result.Get(ctx)
+
+			if err != nil {
+				log.Printf("failed to publish order created event, err: %v\n", err)
+			}
+			log.Printf("successfully published orderCreatedEvent, msg id: %v", id)
+		}(result)
+	}
 }

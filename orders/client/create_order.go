@@ -13,7 +13,7 @@ func createOrder(c pb.OrderServiceClient) {
 		{
 			OrderedQuantity: 1,
 			Price:           45.00,
-			Sku:             "drink-coffee-321-s",
+			Sku:             "XYZ123456",
 		},
 	}
 	req := &pb.Order{

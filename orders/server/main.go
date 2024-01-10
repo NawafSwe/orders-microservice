@@ -59,7 +59,7 @@ func main() {
 	// generate pub sub client
 	client, err := messaging.CreatePubSubClient()
 	if err != nil {
-		log.Fatalf("failed to connect to pub sub")
+		log.Fatalf("failed to connect to pub sub, err: %v\n", err)
 	}
 	defer client.Close()
 	srv.PUBSUB = messaging.PUBSUB{Client: client}
