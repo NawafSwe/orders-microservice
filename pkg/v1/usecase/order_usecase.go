@@ -32,12 +32,6 @@ func (ou OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (
 	return o, nil
 }
 
-func (ou OrderUseCaseImpl) ApproveOrder(ctx context.Context, orderId int64) error {
-	return nil
-}
-func (ou OrderUseCaseImpl) RejectOrder(ctx context.Context, orderId int64) error {
-	return nil
-}
 func (ou OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error) {
 	return ou.repo.UpdateOrderStatus(ctx, orderId, status)
 }
@@ -108,5 +102,31 @@ func (ou OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 }
 
 func (ou OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
+	subId := "rejectOrder"
+	s := ou.pubSubClient.C.Subscription(subId)
+	if b, err := s.Exists(ctx); err != nil {
+		log.Fatalf("failed to get subscription resource, err: %v", err)
+	} else if !b {
+		log.Fatalf("subscription with id :%v, not found", subId)
+	}
+
+	err := s.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
+		var order pb.OrderStatus
+		if err := proto.Unmarshal(msg.Data, &order); err != nil {
+			log.Printf("failed to unmarshal order status for msgId: %v, err: %v \n", msg.ID, err)
+			msg.Nack()
+			return
+		}
+		if _, err := ou.UpdateOrderStatus(ctx, order.OrderId, order.Status); err != nil {
+			log.Printf("failed to update order status, err: %v\n", err)
+			msg.Nack()
+			return
+		}
+		msg.Ack()
+	})
+
+	if err != nil {
+		log.Fatalf("failed to receive messages for sub: %v\n", subId)
+	}
 
 }
