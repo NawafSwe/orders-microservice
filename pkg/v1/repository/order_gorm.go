@@ -7,7 +7,6 @@ import (
 	"github.com/nawafswe/orders-service/internal/models"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	"gorm.io/gorm"
-	"log"
 )
 
 type OrderRepoImpl struct {
@@ -27,10 +26,7 @@ func (r OrderRepoImpl) Create(ctx context.Context, order models.Order) (models.O
 	if tx.RowsAffected == 0 {
 		return models.Order{}, errors.New("failed to create order for unknown error")
 	}
-	log.Printf("created order with details --> %v\n", order)
-	var createdOrder models.Order
-	tx.Scan(&createdOrder)
-	return createdOrder, nil
+	return order, nil
 }
 func (r OrderRepoImpl) UpdateOrderStatus(ctx context.Context, id int64, status string) (models.Order, error) {
 

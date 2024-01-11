@@ -28,7 +28,7 @@ func (ou OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (
 	if err != nil {
 		return order, err
 	}
-	ou.PublishOrderCreatedEvent(ctx, grpc.FromDomain(order))
+	ou.PublishOrderCreatedEvent(ctx, grpc.FromDomain(o))
 	return o, nil
 }
 
