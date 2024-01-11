@@ -11,4 +11,5 @@ message OrderedItem {
     int32 ordered_quantity = 2;
     double price = 3;
     string sku = 4;
+    int64 ordered_item_id = 5;
 }
