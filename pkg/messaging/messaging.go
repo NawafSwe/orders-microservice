@@ -106,6 +106,41 @@ func (p PUBSUB) GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, er
 	}
 	return t, nil
 }
+
+// Move this logic into order saga, or into the use cases instead as this considered a use case on its own
+
+func (p PUBSUB) PublishOrderCreatedEvent(ctx context.Context, order *pb.Order) {
+	data, err := proto.Marshal(order)
+	if err != nil {
+		log.Fatalf("error occured while marshling order data, err: %v\n", err)
+	}
+	topicId := "orderCreated"
+	t, err := p.GetTopic(ctx, topicId)
+	if err != nil {
+		log.Fatalf("error occurred while getting topic %v, err: %w", topicId, err)
+	}
+
+	t.Publish(ctx, &pubsub.Message{
+		Data: data,
+	})
+	//		t.Publish(ctx, &pubsub.Message{
+	//			Data: msg,
+	//		})
+	//		// no need to wait for publish operation
+	//		//go func(result *pubsub.PublishResult) {
+	//		//	ctx, cancel := context.WithCancel(context.Background())
+	//		//	defer cancel()
+	//		//	id, err := result.Get(ctx)
+	//		//
+	//		//	if err != nil {
+	//		//		log.Printf("failed to publish order created event, err: %v\n", err)
+	//		//	}
+	//		//	log.Printf("successfully published orderCreatedEvent, msg id: %v", id)
+	//		//}(result)
+	//	}
+
+}
+
 func (p PUBSUB) HandleOrderApproval(ctx context.Context) {
 	approveOrder := p.C.Subscription("approveOrder")
 
