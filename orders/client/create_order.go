@@ -11,15 +11,15 @@ import (
 func createOrder(c pb.OrderServiceClient) {
 	items := []*pb.OrderedItem{
 		{
-			ItemId:          int64(9),
+			OrderedItemId:   int64(24),
 			OrderedQuantity: 1,
-			Price:           45.00,
+			Price:           10.00,
 			Sku:             "XYZ123456",
 		},
 	}
 	req := &pb.Order{
 		CustomerId: 1,
-		GrandTotal: 45.00,
+		GrandTotal: 10.00,
 		Items:      items,
 		Status:     "New",
 	}

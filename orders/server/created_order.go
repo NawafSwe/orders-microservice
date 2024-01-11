@@ -35,6 +35,7 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 			createdItems = append(createdItems, models.OrderedItem{
 				OrderedQuantity: item.OrderedQuantity,
 				Price:           item.Price,
+				OrderedItemId:   item.OrderedItemId,
 				Sku:             item.Sku,
 				OrderID:         createdOrder.ID,
 			})
@@ -50,6 +51,7 @@ func (s *Server) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 		for _, item := range createdItems {
 			preparedItems = append(preparedItems, &pb.OrderedItem{
 				ItemId:          int64(item.ID),
+				OrderedItemId:   item.OrderedItemId,
 				OrderedQuantity: item.OrderedQuantity,
 				Price:           item.Price,
 				Sku:             item.Sku,
@@ -84,7 +86,7 @@ func publishOrderCreatedEvent(ctx context.Context, s *Server, data proto.Message
 		t.Publish(ctx, &pubsub.Message{
 			Data: msg,
 		})
-
+		// no need to wait for publish operation
 		//go func(result *pubsub.PublishResult) {
 		//	ctx, cancel := context.WithCancel(context.Background())
 		//	defer cancel()
