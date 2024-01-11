@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/nawafswe/orders-service/internal/db"
@@ -10,6 +11,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 	ordersGrpcService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
@@ -61,9 +63,24 @@ func main() {
 
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
-	// start serving requests
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)
-	}
 
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		defer wg.Done()
+		orderUseCase.HandleOrderApproval(ctx)
+	}()
+
+	go func() {
+		// start serving requests
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)
+		}
+		defer cancel()
+	}()
+
+	wg.Wait()
 }
