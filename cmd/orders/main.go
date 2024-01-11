@@ -47,9 +47,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed connecting to the db, err:%v\n", err)
 	}
-	ordersRepo := repo.New(dbConn)
-	orderUseCase := usecase.New(ordersRepo)
-	ordersGrpcService.New(s, orderUseCase)
 
 	// generate pub sub client
 	client := messaging.New(os.Getenv("GOOGLE_PROJECT_ID"))
@@ -57,6 +54,10 @@ func main() {
 		log.Fatalf("failed to connect to pub sub, err: %v\n", err)
 	}
 	defer client.C.Close()
+
+	ordersRepo := repo.New(dbConn)
+	orderUseCase := usecase.New(ordersRepo, client)
+	ordersGrpcService.New(s, orderUseCase)
 
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
