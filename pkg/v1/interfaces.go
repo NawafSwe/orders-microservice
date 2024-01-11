@@ -12,8 +12,7 @@ type OrderRepo interface {
 
 type OrderUseCase interface {
 	PlaceOrder(ctx context.Context, order models.Order) (models.Order, error)
-	ApproveOrder(ctx context.Context, orderId int64) error
-	RejectOrder(ctx context.Context, orderId int64) error
 	UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error)
 	HandleOrderApproval(ctx context.Context)
+	HandleOrderRejection(ctx context.Context)
 }

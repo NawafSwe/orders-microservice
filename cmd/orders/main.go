@@ -65,7 +65,7 @@ func main() {
 	log.Printf("Server listening at %v", lis.Addr())
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -73,8 +73,12 @@ func main() {
 		defer wg.Done()
 		orderUseCase.HandleOrderApproval(ctx)
 	}()
-
 	go func() {
+		defer wg.Done()
+		orderUseCase.HandleOrderRejection(ctx)
+	}()
+	go func() {
+		defer wg.Done()
 		// start serving requests
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)
