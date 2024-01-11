@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"github.com/joho/godotenv"
 	pb "github.com/nawafswe/orders-service/orders/proto"
@@ -57,12 +58,12 @@ func main() {
 	srv.DB = db
 
 	// generate pub sub client
-	client, err := messaging.CreatePubSubClient()
+	client := messaging.New(os.Getenv("GOOGLE_PROJECT_ID"))
 	if err != nil {
 		log.Fatalf("failed to connect to pub sub, err: %v\n", err)
 	}
-	defer client.Close()
-	srv.PUBSUB = messaging.PUBSUB{Client: client}
+	defer client.C.Close()
+	srv.PUBSUB = client
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
 	srv.PUBSUB.CreateTopic("order_status_update")

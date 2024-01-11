@@ -77,7 +77,7 @@ func publishOrderCreatedEvent(ctx context.Context, s *Server, data proto.Message
 		log.Fatalf("failed to marshal proto message")
 	}
 	orderCreatedTopic := "orderCreated"
-	t := s.PUBSUB.Client.Topic(orderCreatedTopic)
+	t := s.PUBSUB.C.Topic(orderCreatedTopic)
 	if b, err := t.Exists(ctx); err != nil {
 		log.Printf("failed to publish for topic: %v, err: %v\n", orderCreatedTopic, err)
 	} else if !b {

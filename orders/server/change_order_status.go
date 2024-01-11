@@ -30,10 +30,10 @@ func (s *Server) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*em
 		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("order with id: %v, not found", in.OrderId))
 	}
 
-	t := s.PUBSUB.Client.Topic("order_status_update")
+	t := s.PUBSUB.C.Topic("order_status_update")
 	if val, _ := t.Exists(ctx); !val {
 		log.Println("topic does not exist, going to create one...")
-		t, _ = s.PUBSUB.Client.CreateTopic(ctx, "order_status_update")
+		t, _ = s.PUBSUB.C.CreateTopic(ctx, "order_status_update")
 	}
 	// putting a correlation_id, and deal with it as a saga and pass it down to other microservices.
 
