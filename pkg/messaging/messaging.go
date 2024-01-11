@@ -4,9 +4,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
-	pb "github.com/nawafswe/orders-service/proto"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 	"log"
 	"os"
 	"time"
@@ -105,68 +103,4 @@ func (p PUBSUB) GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, er
 		return nil, fmt.Errorf("failed to get topic: %v, it is not found", topicId)
 	}
 	return t, nil
-}
-
-// Move this logic into order saga, or into the use cases instead as this considered a use case on its own
-
-func (p PUBSUB) PublishOrderCreatedEvent(ctx context.Context, order *pb.Order) {
-	data, err := proto.Marshal(order)
-	if err != nil {
-		log.Fatalf("error occured while marshling order data, err: %v\n", err)
-	}
-	topicId := "orderCreated"
-	t, err := p.GetTopic(ctx, topicId)
-	if err != nil {
-		log.Fatalf("error occurred while getting topic %v, err: %w", topicId, err)
-	}
-
-	t.Publish(ctx, &pubsub.Message{
-		Data: data,
-	})
-	//		t.Publish(ctx, &pubsub.Message{
-	//			Data: msg,
-	//		})
-	//		// no need to wait for publish operation
-	//		//go func(result *pubsub.PublishResult) {
-	//		//	ctx, cancel := context.WithCancel(context.Background())
-	//		//	defer cancel()
-	//		//	id, err := result.Get(ctx)
-	//		//
-	//		//	if err != nil {
-	//		//		log.Printf("failed to publish order created event, err: %v\n", err)
-	//		//	}
-	//		//	log.Printf("successfully published orderCreatedEvent, msg id: %v", id)
-	//		//}(result)
-	//	}
-
-}
-
-func (p PUBSUB) HandleOrderApproval(ctx context.Context) {
-	approveOrder := p.C.Subscription("approveOrder")
-
-	if b, err := approveOrder.Exists(ctx); err != nil {
-		log.Fatalf("cannot handle order approval at the moment, err: %v\n", err)
-	} else if !b {
-		log.Fatalf("approveOrder subscribtion resource does not exist")
-	}
-
-	err := approveOrder.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
-		log.Printf("recevied order approval request with msgId: %v\n", msg.ID)
-		var orderStatus pb.OrderStatus
-		if err := proto.Unmarshal(msg.Data, &orderStatus); err != nil {
-			log.Printf("failed to unmarshal message of order status, err: %v\n", err)
-			// configure nack
-			msg.Nack()
-			return
-		}
-		// update order status
-		msg.Ack()
-	})
-	if err != nil {
-		log.Fatalf("Cannot receive messages for order approval at the moment, err: %v\n", err)
-	}
-}
-
-func (p PUBSUB) HandleOrderRejection(ctx context.Context) {
-
 }
