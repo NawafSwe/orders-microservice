@@ -66,7 +66,6 @@ func main() {
 	srv.PUBSUB = client
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
-	srv.PUBSUB.CreateTopic("order_status_update")
 	// start serving requests
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)
