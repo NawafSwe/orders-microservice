@@ -2,9 +2,9 @@ package db
 
 import (
 	"fmt"
+	"github.com/nawafswe/orders-service/internal/models"
 	"os"
 
-	"github.com/nawafswe/orders-service/orders/server/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

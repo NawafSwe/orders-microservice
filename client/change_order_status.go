@@ -2,18 +2,17 @@ package main
 
 import (
 	"context"
+	"github.com/nawafswe/orders-service/proto"
 	"log"
 	"time"
-
-	pb "github.com/nawafswe/orders-service/orders/proto"
 )
 
-func changeOrderStatus(c pb.OrderServiceClient) {
+func changeOrderStatus(c proto.OrderServiceClient) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	_, err := c.ChangeOrderStatus(ctx, &pb.OrderStatus{
+	_, err := c.ChangeOrderStatus(ctx, &proto.OrderStatus{
 		OrderId: 1,
 		Status:  "Under-Preparation",
 	})

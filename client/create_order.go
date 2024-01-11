@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
+	"github.com/nawafswe/orders-service/proto"
 	"log"
 	"time"
-
-	pb "github.com/nawafswe/orders-service/orders/proto"
 )
 
-func createOrder(c pb.OrderServiceClient) {
-	items := []*pb.OrderedItem{
+func createOrder(c proto.OrderServiceClient) {
+	items := []*proto.OrderedItem{
 		{
 			OrderedItemId:   int64(24),
 			OrderedQuantity: 1,
@@ -17,7 +16,7 @@ func createOrder(c pb.OrderServiceClient) {
 			Sku:             "XYZ123456",
 		},
 	}
-	req := &pb.Order{
+	req := &proto.Order{
 		CustomerId: 1,
 		GrandTotal: 10.00,
 		Items:      items,

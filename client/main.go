@@ -1,10 +1,10 @@
 package main
 
 import (
+	pb "github.com/nawafswe/orders-service/proto"
 	"log"
 
 	"github.com/joho/godotenv"
-	pb "github.com/nawafswe/orders-service/orders/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

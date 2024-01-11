@@ -3,9 +3,9 @@ package domain
 import (
 	"context"
 	"errors"
+	"github.com/nawafswe/orders-service/internal/models"
 	"log"
 
-	"github.com/nawafswe/orders-service/orders/server/internal/models"
 	"gorm.io/gorm"
 )
 

@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
-	pb "github.com/nawafswe/orders-service/orders/proto"
+	pb "github.com/nawafswe/orders-service/proto"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"log"

@@ -3,28 +3,23 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/nawafswe/orders-service/internal/db"
+	"github.com/nawafswe/orders-service/pkg/messaging"
+	"github.com/nawafswe/orders-service/pkg/v1/repository"
+	"github.com/nawafswe/orders-service/pkg/v1/usecase"
 	"log"
 	"net"
 	"os"
 
 	"github.com/joho/godotenv"
-	pb "github.com/nawafswe/orders-service/orders/proto"
-	"github.com/nawafswe/orders-service/orders/server/internal/db"
-	"github.com/nawafswe/orders-service/orders/server/pkg/messaging"
+	ordersGrpcService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"gorm.io/gorm"
 )
 
 var (
 	port = flag.Int("port", 9000, "gRPC server port")
 )
-
-type Server struct {
-	pb.OrderServiceServer
-	DB     *gorm.DB
-	PUBSUB messaging.PUBSUB
-}
 
 func main() {
 	err := godotenv.Load(".env")
@@ -39,23 +34,22 @@ func main() {
 		log.Fatalf("failed to create server credentials: %v\n", err)
 	}
 
-	srvOpts := []grpc.ServerOption{}
+	var srvOpts []grpc.ServerOption
 	srvOpts = append(srvOpts, grpc.Creds(cred))
-
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen on addr:%v\n", lis.Addr())
 	}
 
 	s := grpc.NewServer(srvOpts...)
-	// register server info, including services from proto buff
-	srv := &Server{}
-	pb.RegisterOrderServiceServer(s, srv)
-	db, err := db.InitDB()
+
+	dbConn, err := db.InitDB()
 	if err != nil {
 		log.Fatalf("failed connecting to the db, err:%v\n", err)
 	}
-	srv.DB = db
+	ordersRepo := repo.New(dbConn)
+	orderUseCase := usecase.New(ordersRepo)
+	ordersGrpcService.New(s, orderUseCase)
 
 	// generate pub sub client
 	client := messaging.New(os.Getenv("GOOGLE_PROJECT_ID"))
@@ -63,7 +57,7 @@ func main() {
 		log.Fatalf("failed to connect to pub sub, err: %v\n", err)
 	}
 	defer client.C.Close()
-	srv.PUBSUB = client
+
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
 	// start serving requests
