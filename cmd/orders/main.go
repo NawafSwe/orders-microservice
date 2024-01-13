@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cloud.google.com/go/pubsub"
 	"context"
 	"flag"
 	"fmt"
@@ -51,14 +52,20 @@ func main() {
 	}
 
 	// generate pub sub client
-	client := messaging.New(os.Getenv("GOOGLE_PROJECT_ID"))
+	ps := messaging.New(os.Getenv("GOOGLE_PROJECT_ID"))
 	if err != nil {
 		log.Fatalf("failed to connect to pub sub, err: %v\n", err)
 	}
-	defer client.C.Close()
+	// on main exist make sure to prevent resources leaks and close the connection of pubsub client
+	defer func(C *pubsub.Client) {
+		err := C.Close()
+		if err != nil {
+
+		}
+	}(ps.C)
 
 	ordersRepo := repo.New(dbConn)
-	orderUseCase := usecase.New(ordersRepo, client)
+	orderUseCase := usecase.New(ordersRepo, ps)
 	ordersGrpcService.New(s, orderUseCase)
 
 	log.Printf("successfully connected to pub sub client...\n")
