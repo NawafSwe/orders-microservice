@@ -28,21 +28,42 @@ func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (m
 	if err != nil {
 		return order, err
 	}
-	u.PublishOrderCreatedEvent(ctx, grpc.FromDomain(o))
+	go func() {
+		u.PublishOrderCreatedEvent(grpc.FromDomain(o))
+	}()
+
+	go func() {
+		u.PublishOrderStatusChanged(order)
+	}()
 	return o, nil
 }
 
 func (u OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error) {
-	return u.repo.UpdateOrderStatus(ctx, orderId, status)
+	o, err := u.repo.UpdateOrderStatus(ctx, orderId, status)
+	if err != nil {
+		return models.Order{}, err
+	}
+	// the reason to use a new context here, because this function could be used by external gprc call
+	// once returning to caller, the context will be canclled, to assure we resume publishing this event
+	// we used long-lived context.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		u.PublishOrderStatusChanged(o)
+	}()
+	return o, nil
 }
 
 // Maybe Moving this logic into saga?, probably I need to do research about it
 
-func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order *pb.Order) {
+func (u OrderUseCaseImpl) PublishOrderCreatedEvent(order *pb.Order) {
 	data, err := proto.Marshal(order)
 	if err != nil {
 		log.Fatalf("error occured while marshling order data, err: %v\n", err)
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	topicId := "orderCreated"
 	t, err := u.pubSubClient.GetTopic(ctx, topicId)
 	if err != nil {
@@ -71,15 +92,14 @@ func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order *p
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 	subId := "approveOrder"
-	approveOrder := u.pubSubClient.C.Subscription(subId)
+	approveOrder, err := u.pubSubClient.GetSubscription(ctx, subId)
 
-	if b, err := approveOrder.Exists(ctx); err != nil {
-		log.Fatalf("cannot handle order approval at the moment, err: %v\n", err)
-	} else if !b {
-		log.Fatalf("approveOrder subscribtion resource does not exist")
+	if err != nil {
+		log.Printf("cannot handle order approval at the moment, err: %v\n", err)
+		return
 	}
 
-	err := approveOrder.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
+	err = approveOrder.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
 		log.Printf("recevied order approval request with msgId: %v\n", msg.ID)
 		var orderStatus pb.OrderStatus
 		if err := proto.Unmarshal(msg.Data, &orderStatus); err != nil {
@@ -103,14 +123,12 @@ func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 
 func (u OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 	subId := "rejectOrder"
-	s := u.pubSubClient.C.Subscription(subId)
-	if b, err := s.Exists(ctx); err != nil {
-		log.Fatalf("failed to get subscription resource, err: %v", err)
-	} else if !b {
-		log.Fatalf("subscription with id :%v, not found", subId)
+	s, err := u.pubSubClient.GetSubscription(ctx, subId)
+	if err != nil {
+		log.Printf("failed to get subscription resource, err: %v", err)
+		return
 	}
-
-	err := s.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
+	err = s.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
 		var order pb.OrderStatus
 		if err := proto.Unmarshal(msg.Data, &order); err != nil {
 			log.Printf("failed to unmarshal order status for msgId: %v, err: %v \n", msg.ID, err)
@@ -129,4 +147,25 @@ func (u OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 		log.Fatalf("failed to receive messages for sub: %v\n", subId)
 	}
 
+}
+
+func (u OrderUseCaseImpl) PublishOrderStatusChanged(order models.Order) {
+	orderPb := pb.OrderStatus{OrderId: int64(order.ID), Status: order.Status}
+	data, err := proto.Marshal(orderPb.ProtoReflect().Interface())
+	if err != nil {
+		log.Printf("failed to marshal message, err: %v\n", err)
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	t, err := u.pubSubClient.GetTopic(ctx, "orderStatusChanged")
+	if err != nil {
+		log.Printf("could not publish event, due to err: %v\n", err)
+		return
+	}
+
+	// publish status update
+	t.Publish(ctx, &pubsub.Message{
+		Data: data,
+	})
 }

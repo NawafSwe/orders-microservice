@@ -104,3 +104,15 @@ func (p PUBSUB) GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, er
 	}
 	return t, nil
 }
+
+func (p PUBSUB) GetSubscription(ctx context.Context, id string) (*pubsub.Subscription, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
+	defer cancel()
+	s := p.C.Subscription(id)
+	if b, err := s.Exists(ctx); err != nil {
+		return nil, fmt.Errorf("failed to get subscription, err: %w", err)
+	} else if !b {
+		return nil, fmt.Errorf("subscription:%v not found", id)
+	}
+	return s, nil
+}
