@@ -151,7 +151,7 @@ func (u OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 
 func (u OrderUseCaseImpl) PublishOrderStatusChanged(order models.Order) {
 	orderPb := pb.OrderStatus{OrderId: int64(order.ID), Status: order.Status}
-	data, err := proto.Marshal(orderPb.ProtoReflect().Interface())
+	data, err := proto.Marshal(&orderPb)
 	if err != nil {
 		log.Printf("failed to marshal message, err: %v\n", err)
 		return
