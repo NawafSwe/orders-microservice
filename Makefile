@@ -14,7 +14,7 @@ endif
 PACKAGE = $(shell head -1 go.mod | awk '{print $$2}')
 
 .DEFAULT_GOAL := help
-.PHONY: orders help proto all test clean clean_orders rebuild bump about
+.PHONY: help proto clean clean_orders build about
 
 
 
