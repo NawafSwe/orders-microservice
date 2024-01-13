@@ -17,7 +17,7 @@ type OrdersServer struct {
 	pb.UnimplementedOrderServiceServer
 }
 
-func New(s grpc.ServiceRegistrar, u interfaces.OrderUseCase) {
+func NewOrderService(s grpc.ServiceRegistrar, u interfaces.OrderUseCase) {
 	pb.RegisterOrderServiceServer(s, &OrdersServer{UseCase: u})
 }
 

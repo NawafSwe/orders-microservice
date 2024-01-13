@@ -64,9 +64,9 @@ func main() {
 		}
 	}(ps.C)
 
-	ordersRepo := repo.New(dbConn)
-	orderUseCase := usecase.New(ordersRepo, ps)
-	ordersGrpcService.New(s, orderUseCase)
+	ordersRepo := repo.NewOrderRepo(dbConn)
+	orderUseCase := usecase.NewOrderUseCase(ordersRepo, ps)
+	ordersGrpcService.NewOrderService(s, orderUseCase)
 
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())

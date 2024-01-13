@@ -19,34 +19,34 @@ type OrderUseCaseImpl struct {
 	pubSubClient messaging.PUBSUB
 }
 
-func New(repo interfaces.OrderRepo, ps messaging.PUBSUB) interfaces.OrderUseCase {
+func NewOrderUseCase(repo interfaces.OrderRepo, ps messaging.PUBSUB) interfaces.OrderUseCase {
 	return OrderUseCaseImpl{repo: repo, pubSubClient: ps}
 }
 
-func (ou OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (models.Order, error) {
-	o, err := ou.repo.Create(ctx, order)
+func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (models.Order, error) {
+	o, err := u.repo.Create(ctx, order)
 	if err != nil {
 		return order, err
 	}
-	ou.PublishOrderCreatedEvent(ctx, grpc.FromDomain(o))
+	u.PublishOrderCreatedEvent(ctx, grpc.FromDomain(o))
 	return o, nil
 }
 
-func (ou OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error) {
-	return ou.repo.UpdateOrderStatus(ctx, orderId, status)
+func (u OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error) {
+	return u.repo.UpdateOrderStatus(ctx, orderId, status)
 }
 
 // Maybe Moving this logic into saga?, probably I need to do research about it
 
-func (ou OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order *pb.Order) {
+func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order *pb.Order) {
 	data, err := proto.Marshal(order)
 	if err != nil {
 		log.Fatalf("error occured while marshling order data, err: %v\n", err)
 	}
 	topicId := "orderCreated"
-	t, err := ou.pubSubClient.GetTopic(ctx, topicId)
+	t, err := u.pubSubClient.GetTopic(ctx, topicId)
 	if err != nil {
-		log.Fatalf("error occurred while getting topic %v, err: %w", topicId, err)
+		log.Fatalf("error occurred while getting topic %v, err: %v", topicId, err)
 	}
 
 	t.Publish(ctx, &pubsub.Message{
@@ -69,9 +69,9 @@ func (ou OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order *
 	//	}
 
 }
-func (ou OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
+func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 	subId := "approveOrder"
-	approveOrder := ou.pubSubClient.C.Subscription(subId)
+	approveOrder := u.pubSubClient.C.Subscription(subId)
 
 	if b, err := approveOrder.Exists(ctx); err != nil {
 		log.Fatalf("cannot handle order approval at the moment, err: %v\n", err)
@@ -89,7 +89,7 @@ func (ou OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 			return
 		}
 		// update order status
-		if _, err := ou.UpdateOrderStatus(ctx, orderStatus.OrderId, orderStatus.Status); err != nil {
+		if _, err := u.UpdateOrderStatus(ctx, orderStatus.OrderId, orderStatus.Status); err != nil {
 			log.Printf("could not handle order approval, error: %v\n", err)
 			msg.Nack()
 			return
@@ -101,9 +101,9 @@ func (ou OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 	}
 }
 
-func (ou OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
+func (u OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 	subId := "rejectOrder"
-	s := ou.pubSubClient.C.Subscription(subId)
+	s := u.pubSubClient.C.Subscription(subId)
 	if b, err := s.Exists(ctx); err != nil {
 		log.Fatalf("failed to get subscription resource, err: %v", err)
 	} else if !b {
@@ -117,7 +117,7 @@ func (ou OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 			msg.Nack()
 			return
 		}
-		if _, err := ou.UpdateOrderStatus(ctx, order.OrderId, order.Status); err != nil {
+		if _, err := u.UpdateOrderStatus(ctx, order.OrderId, order.Status); err != nil {
 			log.Printf("failed to update order status, err: %v\n", err)
 			msg.Nack()
 			return

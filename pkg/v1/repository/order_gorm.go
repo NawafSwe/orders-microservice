@@ -13,7 +13,7 @@ type OrderRepoImpl struct {
 	db *gorm.DB
 }
 
-func New(d *gorm.DB) interfaces.OrderRepo {
+func NewOrderRepo(d *gorm.DB) interfaces.OrderRepo {
 	return OrderRepoImpl{db: d}
 }
 
