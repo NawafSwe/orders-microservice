@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/nawafswe/orders-service/internal/models"
+	"log"
 	"os"
 
 	"gorm.io/driver/postgres"
@@ -23,7 +24,9 @@ func InitDB() (*gorm.DB, error) {
 		password,
 	)
 	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	DB.AutoMigrate(models.Order{}, models.OrderedItem{})
+	if err := DB.AutoMigrate(models.Order{}, models.OrderedItem{}); err != nil {
+		log.Fatal("failed to migrate db tables, err: %w", err)
+	}
 	if err != nil {
 		return nil, err
 	}
