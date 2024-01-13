@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package orders;
 
-option go_package = "github.com/nawafswe/orders-service/orders/proto";
+option go_package = "github.com/nawafswe/orders-service/proto";
 import "google/protobuf/empty.proto";
 
 import "order.proto";
