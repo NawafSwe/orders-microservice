@@ -16,9 +16,7 @@ PACKAGE = $(shell head -1 go.mod | awk '{print $$2}')
 .DEFAULT_GOAL := help
 .PHONY: orders help proto all test clean clean_orders rebuild bump about
 
-all: proto ## Build all
 
-orders: proto ## Build orders
 
 build:
 	@${CHECK_DIR_CMD}
@@ -26,8 +24,7 @@ build:
 	go build -o ${BIN_DIR}/cmd/orders ./${SERVER_DIR}
 	go build -o ${BIN_DIR}/${CLIENT_DIR}/${CLIENT_BIN} ./${CLIENT_DIR}
 
-test: all ## Launch tests
-	go test ./...
+
 
 clean: clean_orders ## Clean generated files
 	${RM_F_CMD} ssl/*.crt
@@ -39,10 +36,6 @@ clean: clean_orders ## Clean generated files
 clean_orders: ## Clean generated files for orders
 	${RM_F_CMD} ${PROTO_DIR}/*.pb.go
 
-rebuild: clean all ## Rebuild the whole project
-
-bump: all ## Update packages version
-	go get -u ./...
 
 about: ## Display info related to the build
 	@echo "OS: ${OS}"
