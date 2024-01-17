@@ -16,10 +16,10 @@ import (
 type OrderUseCaseImpl struct {
 	repo interfaces.OrderRepo
 	// define an interface for messaging once you segregate business logic for publishing events and handling events from there
-	pubSubClient messaging.PUBSUB
+	pubSubClient messaging.MessageServiceImpl
 }
 
-func NewOrderUseCase(repo interfaces.OrderRepo, ps messaging.PUBSUB) interfaces.OrderUseCase {
+func NewOrderUseCase(repo interfaces.OrderRepo, ps messaging.MessageServiceImpl) interfaces.OrderUseCase {
 	return OrderUseCaseImpl{repo: repo, pubSubClient: ps}
 }
 

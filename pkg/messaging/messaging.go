@@ -10,20 +10,36 @@ import (
 	"time"
 )
 
-type PUBSUB struct {
+type MessageSender interface {
+	Publish(ctx context.Context, topic string, msg *pubsub.Message) error
+}
+
+type MessageReceiver interface {
+	Subscribe(ctx context.Context, subscription string) error
+}
+
+type MessageService interface {
+	MessageSender
+	MessageReceiver
+	CreateSubscription(ctx context.Context, id string, topic *pubsub.Topic) error
+	CreateTopic(ctx context.Context, topic string) (*pubsub.Topic, error)
+	GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, error)
+	GetSubscription(ctx context.Context, id string) (*pubsub.Subscription, error)
+}
+type MessageServiceImpl struct {
 	C *pubsub.Client
 }
 
-func New(projectId string) PUBSUB {
+func New(projectId string) MessageServiceImpl {
 	// we need a longed lived context to maintain client connection, using withCancel or timeout will cause unauthorized error, because the context going to be cancelled
 	c, err := pubsub.NewClient(context.Background(), projectId)
 	if err != nil {
 		log.Fatalf("failed to obtain a pubsub client for project: %v, err: %v\n", projectId, err)
 	}
-	return PUBSUB{C: c}
+	return MessageServiceImpl{C: c}
 }
 
-func (p PUBSUB) CreateSub(subId string, t *pubsub.Topic) {
+func (p MessageServiceImpl) CreateSub(subId string, t *pubsub.Topic) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	sub, err := p.C.CreateSubscription(ctx, subId, pubsub.SubscriptionConfig{
@@ -43,7 +59,7 @@ func (p PUBSUB) CreateSub(subId string, t *pubsub.Topic) {
 
 }
 
-func (p PUBSUB) CreateTopic(topic string) *pubsub.Topic {
+func (p MessageServiceImpl) CreateTopic(topic string) *pubsub.Topic {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -60,7 +76,7 @@ func (p PUBSUB) CreateTopic(topic string) *pubsub.Topic {
 	return t
 }
 
-func (p PUBSUB) CreateTopicWithSchema(topic string, tc pubsub.TopicConfig) {
+func (p MessageServiceImpl) CreateTopicWithSchema(topic string, tc pubsub.TopicConfig) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*100)
 	defer cancel()
 
@@ -78,7 +94,7 @@ func (p PUBSUB) CreateTopicWithSchema(topic string, tc pubsub.TopicConfig) {
 	}
 }
 
-func (p PUBSUB) RetrieveTopic(topicId string) (*pubsub.Topic, error) {
+func (p MessageServiceImpl) RetrieveTopic(topicId string) (*pubsub.Topic, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	defer cancel()
@@ -94,7 +110,7 @@ func (p PUBSUB) RetrieveTopic(topicId string) (*pubsub.Topic, error) {
 
 	return t, nil
 }
-func (p PUBSUB) GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, error) {
+func (p MessageServiceImpl) GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, error) {
 	t := p.C.Topic(topicId)
 
 	if b, err := t.Exists(ctx); err != nil {
@@ -105,7 +121,7 @@ func (p PUBSUB) GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, er
 	return t, nil
 }
 
-func (p PUBSUB) GetSubscription(ctx context.Context, id string) (*pubsub.Subscription, error) {
+func (p MessageServiceImpl) GetSubscription(ctx context.Context, id string) (*pubsub.Subscription, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
 	s := p.C.Subscription(id)
