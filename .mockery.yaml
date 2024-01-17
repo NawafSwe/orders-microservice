@@ -10,3 +10,8 @@ packages:
 #        config:
 
       OrderUseCase:
+
+  github.com/nawafswe/orders-service/pkg/messaging:
+    config:
+    interfaces:
+      MessageService:
