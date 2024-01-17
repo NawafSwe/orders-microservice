@@ -79,15 +79,14 @@ func TestShouldPlaceOrderSuccessfully(t *testing.T) {
 		t.Errorf("response is nil")
 	}
 	orderUseCase.AssertNumberOfCalls(t, "PlaceOrder", 1)
-	o := orderService.ToDomain(order)
-	orderUseCase.AssertCalled(t, "PlaceOrder", mock.Anything, o)
-
-	if len(res.Items) != len(o.Items) {
-		t.Errorf("expected number of items is %v, but got %v\n", len(o.Items), len(res.Items))
+	orderUseCase.AssertCalled(t, "PlaceOrder", mock.Anything, orderModel)
+	orderUseCase.AssertExpectations(t)
+	if len(res.Items) != len(orderModel.Items) {
+		t.Errorf("expected number of items is %v, but got %v\n", len(orderModel.Items), len(res.Items))
 	}
 
-	if res.GrandTotal != o.GrandTotal {
-		t.Errorf("expcpted grand total is %v, but got %v", o.GrandTotal, res.GrandTotal)
+	if res.GrandTotal != orderModel.GrandTotal {
+		t.Errorf("expcpted grand total is %v, but got %v", orderModel.GrandTotal, res.GrandTotal)
 	}
 
 }
