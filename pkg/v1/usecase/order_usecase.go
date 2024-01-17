@@ -33,7 +33,7 @@ func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (m
 	}
 	o, err := u.repo.Create(ctx, order)
 	if err != nil {
-		return order, err
+		return models.Order{}, err
 	}
 	go func() {
 		u.PublishOrderCreatedEvent(grpc.FromDomain(o))
@@ -50,8 +50,8 @@ func (u OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, 
 	if err != nil {
 		return models.Order{}, err
 	}
-	// the reason to use a new context here, because this function could be used by external gprc call
-	// once returning to caller, the context will be canclled, to assure we resume publishing this event
+	// the reason to use a new context here, because this function could be used by external grpc call
+	// once returning to caller, the context will be cancelled, to assure we resume publishing this event
 	// we used long-lived context.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -66,7 +66,7 @@ func (u OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, 
 func (u OrderUseCaseImpl) PublishOrderCreatedEvent(order *pb.Order) {
 	data, err := proto.Marshal(order)
 	if err != nil {
-		log.Fatalf("error occured while marshling order data, err: %v\n", err)
+		log.Printf("error occured while marshling order data, err: %v\n", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -74,7 +74,7 @@ func (u OrderUseCaseImpl) PublishOrderCreatedEvent(order *pb.Order) {
 	topicId := "orderCreated"
 	t, err := u.pubSubClient.GetTopic(ctx, topicId)
 	if err != nil {
-		log.Fatalf("error occurred while getting topic %v, err: %v", topicId, err)
+		log.Printf("error occurred while getting topic %v, err: %v", topicId, err)
 	}
 
 	t.Publish(ctx, &pubsub.Message{
@@ -124,7 +124,7 @@ func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 		msg.Ack()
 	})
 	if err != nil {
-		log.Fatalf("Cannot receive messages for order approval at the moment, err: %v\n", err)
+		log.Printf("Cannot receive messages for order approval at the moment, err: %v\n", err)
 	}
 }
 
@@ -151,7 +151,7 @@ func (u OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 	})
 
 	if err != nil {
-		log.Fatalf("failed to receive messages for sub: %v\n", subId)
+		log.Printf("failed to receive messages for sub: %v\n", subId)
 	}
 
 }
