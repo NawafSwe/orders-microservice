@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/nawafswe/orders-service/internal/models"
 	ordersMocks "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/v1"
 	orderService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
 	pb "github.com/nawafswe/orders-service/proto"
@@ -17,9 +18,7 @@ import (
 	"testing"
 )
 
-// mock
-
-func TestOrdersService(t *testing.T) {
+func TestPlaceOrderService(t *testing.T) {
 
 	tests := map[string]struct {
 		Description    string
@@ -143,4 +142,43 @@ func TestOrdersService(t *testing.T) {
 			test.Assert(t, orderUseCase, test.Input, res)
 		})
 	}
+}
+
+func TestChangeOrderStatusService(t *testing.T) {
+
+	orderUseCase := ordersMocks.NewMockOrderUseCase(t)
+
+	port := flag.Int("port", 9003, "server port")
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	if err != nil {
+		t.Errorf("failed to connect to port %d", *port)
+	}
+	srv := grpc.NewServer()
+	defer srv.Stop()
+	orderService.NewOrderService(srv, orderUseCase)
+	go func() {
+		if err := srv.Serve(lis); err != nil {
+			t.Errorf("failed to start a grpc server on port %d", *port)
+		}
+	}()
+	// define client
+	conn, err := grpc.Dial("localhost:9003", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Error("could not establish a connection to the grpc server")
+	}
+	defer func(conn *grpc.ClientConn) {
+		if err := conn.Close(); err != nil {
+			t.Errorf("failed to kill client connection")
+		}
+	}(conn)
+
+	c := pb.NewOrderServiceClient(conn)
+	in := &pb.OrderStatus{OrderId: 1, Status: "Delivered"}
+	orderUseCase.On("UpdateOrderStatus", mock.Anything, in.OrderId, in.Status).Return(models.Order{}, nil)
+	_, err = c.ChangeOrderStatus(context.Background(), in)
+	if err != nil {
+		t.Errorf("status update field with err: %v", err)
+	}
+	orderUseCase.AssertNumberOfCalls(t, "UpdateOrderStatus", 1)
+
 }
