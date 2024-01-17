@@ -1,4 +1,4 @@
-package tests
+package grpc_tests
 
 import (
 	"context"
