@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"github.com/nawafswe/orders-service/internal/models"
+	pb "github.com/nawafswe/orders-service/proto"
 )
 
 type OrderRepo interface {
@@ -15,4 +16,6 @@ type OrderUseCase interface {
 	UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error)
 	HandleOrderApproval(ctx context.Context)
 	HandleOrderRejection(ctx context.Context)
+	PublishOrderStatusChanged(order models.Order)
+	PublishOrderCreatedEvent(order *pb.Order)
 }
