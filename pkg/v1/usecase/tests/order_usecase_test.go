@@ -21,6 +21,7 @@ func TestOrderUseCase(t *testing.T) {
 			Description: "Should Place order successfully",
 			Before: func(orderMock *ordersMock.MockOrderUseCase, order *models.Order) {
 				orderMock.On("PlaceOrder", mock.Anything, *order).Return(*order, nil)
+				//orderMock.On("PublishOrderCreatedEvent", mock.Anything).Return(nil)
 			},
 			Data: &models.Order{
 				CustomerId: 1,
@@ -38,19 +39,34 @@ func TestOrderUseCase(t *testing.T) {
 			Assert: func(t *testing.T, orderMock *ordersMock.MockOrderUseCase, order *models.Order) {
 				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 				defer cancel()
+				// adding wait groups, to synchronize both go routines, to assert that order created event is published
+				//var wg sync.WaitGroup
+				//wg.Add(2)
+
+				//go func() {
+				//defer wg.Done()
 				o, err := orderMock.PlaceOrder(ctx, *order)
 				if err != nil {
 					t.Errorf("failed place order, expected error with nil but got %v\n", err)
 				}
-				orderMock.AssertCalled(t, "PlaceOrder", mock.Anything, *order)
-				orderMock.AssertExpectations(t)
-
 				if len(o.Items) != 1 {
 					t.Errorf("expected orded items 1 but got %v\n", len(o.Items))
 				}
 				if o.GrandTotal != order.GrandTotal {
 					t.Errorf("expected grand total of %v, but got %v", order.GrandTotal, o.GrandTotal)
 				}
+
+				//}()
+
+				//go func() {
+				//	defer wg.Done()
+				//	time.Sleep(10 * time.Second)
+				//}()
+
+				//wg.Wait()
+				orderMock.AssertCalled(t, "PlaceOrder", mock.Anything, *order)
+				//orderMock.AssertNumberOfCalls(t, "PublishOrderCreatedEvent", 1)
+				orderMock.AssertExpectations(t)
 			},
 		},
 		"FailPlaceOrderDueToInvalidItemQuantity": {
@@ -75,8 +91,7 @@ func TestOrderUseCase(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 				defer cancel()
 				_, err := orderMock.PlaceOrder(ctx, *order)
-				t.Logf("received err: %v\n", err)
-				if err != nil {
+				if err == nil {
 					t.Errorf("failed place order, expected error with %v but got nil\n", err)
 				}
 				orderMock.AssertCalled(t, "PlaceOrder", mock.Anything, *order)
