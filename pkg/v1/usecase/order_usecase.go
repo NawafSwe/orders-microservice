@@ -4,6 +4,7 @@ import "C"
 import (
 	"cloud.google.com/go/pubsub"
 	"context"
+	"fmt"
 	"github.com/nawafswe/orders-service/internal/models"
 	"github.com/nawafswe/orders-service/pkg/messaging"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
@@ -24,6 +25,12 @@ func NewOrderUseCase(repo interfaces.OrderRepo, ps messaging.MessageServiceImpl)
 }
 
 func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (models.Order, error) {
+	for _, i := range order.Items {
+		if i.OrderedQuantity <= 0 {
+			return models.Order{}, fmt.Errorf("supplied quantity for item with sku %v, should be greater than zero, recirved is %v", i.Sku, i.OrderedQuantity)
+
+		}
+	}
 	o, err := u.repo.Create(ctx, order)
 	if err != nil {
 		return order, err
