@@ -3,9 +3,10 @@ module github.com/nawafswe/orders-service
 go 1.21.1
 
 require (
+	cloud.google.com/go v0.110.8
 	cloud.google.com/go/pubsub v1.33.0
-	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.5.1
+	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.31.0
 	gorm.io/driver/postgres v1.5.4
@@ -13,7 +14,6 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.110.8 // indirect
 	cloud.google.com/go/compute v1.23.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.2 // indirect
@@ -28,10 +28,10 @@ require (
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
-	github.com/vektra/mockery v1.1.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/net v0.16.0 // indirect
