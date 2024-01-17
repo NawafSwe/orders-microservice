@@ -11,7 +11,7 @@ packages:
 
       OrderUseCase:
 
-  github.com/nawafswe/orders-service/pkg/messaging:
-    config:
-    interfaces:
-      MessageService:
+#  github.com/nawafswe/orders-service/pkg/messaging:
+#    config:
+#    interfaces:
+#      MessageService:
