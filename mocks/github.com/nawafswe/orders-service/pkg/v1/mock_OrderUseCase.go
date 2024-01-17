@@ -145,6 +145,39 @@ func (_c *MockOrderUseCase_PlaceOrder_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
+// PublishOrderStatusChanged provides a mock function with given fields: order
+func (_m *MockOrderUseCase) PublishOrderStatusChanged(order models.Order) {
+	_m.Called(order)
+}
+
+// MockOrderUseCase_PublishOrderStatusChanged_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishOrderStatusChanged'
+type MockOrderUseCase_PublishOrderStatusChanged_Call struct {
+	*mock.Call
+}
+
+// PublishOrderStatusChanged is a helper method to define mock.On call
+//   - order models.Order
+func (_e *MockOrderUseCase_Expecter) PublishOrderStatusChanged(order interface{}) *MockOrderUseCase_PublishOrderStatusChanged_Call {
+	return &MockOrderUseCase_PublishOrderStatusChanged_Call{Call: _e.mock.On("PublishOrderStatusChanged", order)}
+}
+
+func (_c *MockOrderUseCase_PublishOrderStatusChanged_Call) Run(run func(order models.Order)) *MockOrderUseCase_PublishOrderStatusChanged_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(models.Order))
+	})
+	return _c
+}
+
+func (_c *MockOrderUseCase_PublishOrderStatusChanged_Call) Return() *MockOrderUseCase_PublishOrderStatusChanged_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *MockOrderUseCase_PublishOrderStatusChanged_Call) RunAndReturn(run func(models.Order)) *MockOrderUseCase_PublishOrderStatusChanged_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateOrderStatus provides a mock function with given fields: ctx, orderId, status
 func (_m *MockOrderUseCase) UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error) {
 	ret := _m.Called(ctx, orderId, status)
