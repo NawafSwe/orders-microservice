@@ -1,6 +1,5 @@
 package usecase
 
-import "C"
 import (
 	"cloud.google.com/go/pubsub"
 	"context"

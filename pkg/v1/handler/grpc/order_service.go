@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/nawafswe/orders-service/internal/models"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
@@ -24,6 +25,10 @@ func NewOrderService(s grpc.ServiceRegistrar, u interfaces.OrderUseCase) {
 func (s *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
 	fmt.Printf("OrderService was invoked with Create method, with ctx: %v, in:%v\n", ctx, in)
 	//return nil, status.Error(codes.Internal, "could not complete the operation")
+	if err := validateOrderCreationRequest(in); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
 	o, err := s.UseCase.PlaceOrder(ctx, ToDomain(in))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to place a new order, err: %w", err)
@@ -75,4 +80,40 @@ func FromDomain(o models.Order) *pb.Order {
 		GrandTotal: o.GrandTotal,
 		Items:      items,
 	}
+}
+
+// Validating order creation request before start to process it.
+func validateOrderCreationRequest(o *pb.Order) error {
+	var errs []error
+	if o.OrderId != 0 {
+		errs = append(errs, fmt.Errorf("order id should not be suplied on order placement, provided %d exepcted 0", o.OrderId))
+	}
+
+	if len(o.Items) <= 0 {
+		errs = append(errs, errors.New("cannot place an order with empty items"))
+	}
+	for _, i := range o.Items {
+		if i.OrderedItemId <= 0 {
+			errs = append(errs, fmt.Errorf("ordered item id should be valid, given %d", i.OrderedItemId))
+		}
+		if i.ItemId != 0 {
+			errs = append(errs, errors.New("item id should not be initialized"))
+
+		}
+		if i.Sku == "" {
+			errs = append(errs, fmt.Errorf("the sku field is required"))
+		}
+		if i.OrderedQuantity <= 0 {
+			errs = append(errs, fmt.Errorf("the quantity for item with sku %s should be greater than zero", i.Sku))
+		}
+	}
+
+	if o.CustomerId <= 0 {
+		errs = append(errs, errors.New("the customer id must be supplied"))
+	}
+	if errs != nil {
+		return errors.Join(errs...)
+	}
+	return nil
+
 }
