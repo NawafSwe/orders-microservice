@@ -32,7 +32,10 @@ func (r OrderRepoImpl) UpdateOrderStatus(ctx context.Context, id int64, status s
 
 	tx := r.db.WithContext(ctx).Where("id = ? ", id).Updates(&models.Order{Status: status})
 	if tx.Error != nil {
-		return models.Order{}, fmt.Errorf("error occurred while updating order status, err: %w", tx.Error)
+		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			return models.Order{}, fmt.Errorf("updating status failed due to invalid order id was given %d", id)
+		}
+		return models.Order{}, fmt.Errorf("UpdateOrderStatus: %w", tx.Error)
 	}
 	if tx.RowsAffected == 0 {
 		return models.Order{}, fmt.Errorf("order with id %v not found", id)
