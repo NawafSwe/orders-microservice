@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"strconv"
 	"sync"
 
 	"github.com/joho/godotenv"
@@ -31,15 +32,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	cred, err := credentials.NewServerTLSFromFile("ssl/server.crt", "ssl/server.pem")
-
-	if err != nil {
-		log.Fatalf("failed to create server credentials: %v\n", err)
+	var srvOpts []grpc.ServerOption
+	tlsEnabled := os.Getenv("TLS_ENABLED")
+	if b, _ := strconv.ParseBool(tlsEnabled); b {
+		cred, err := credentials.NewServerTLSFromFile("ssl/server.crt", "ssl/server.pem")
+		srvOpts = append(srvOpts, grpc.Creds(cred))
+		if err != nil {
+			log.Fatalf("failed to create server credentials: %v\n", err)
+		}
 	}
 
-	var srvOpts []grpc.ServerOption
-	srvOpts = append(srvOpts, grpc.Creds(cred))
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen on addr:%v\n", lis.Addr())
@@ -59,6 +61,12 @@ func main() {
 	}
 	// on main exist make sure to prevent resources leaks and close the connection of pubsub client
 	defer func(service messaging.MessageService) {
+		// if failure occurred, and you want to recover and not stop the gprc server
+		//defer func(){
+		//if v:= recover(); v!=nil{
+		//	// gracefully handle the recover, maybe log to datadog, or continue processing,
+		//}
+		//}()
 		v, ok := service.(messaging.MessageServiceImpl)
 		if ok {
 			err := v.C.Close()
