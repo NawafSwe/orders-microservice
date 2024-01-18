@@ -18,19 +18,20 @@ type MessageReceiver interface {
 	Subscribe(ctx context.Context, subscription string) error
 }
 
+// Would embed MessageSender, MessageReceiver
+
 type MessageService interface {
-	MessageSender
-	MessageReceiver
-	CreateSubscription(ctx context.Context, id string, topic *pubsub.Topic) error
-	CreateTopic(ctx context.Context, topic string) (*pubsub.Topic, error)
-	GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, error)
+	CreateSub(id string, topic *pubsub.Topic)
+	CreateTopic(topic string) *pubsub.Topic
 	GetSubscription(ctx context.Context, id string) (*pubsub.Subscription, error)
+	CreateTopicWithSchema(topic string, tc pubsub.TopicConfig)
+	GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, error)
 }
 type MessageServiceImpl struct {
 	C *pubsub.Client
 }
 
-func New(projectId string) MessageServiceImpl {
+func New(projectId string) MessageService {
 	// we need a longed lived context to maintain client connection, using withCancel or timeout will cause unauthorized error, because the context going to be cancelled
 	c, err := pubsub.NewClient(context.Background(), projectId)
 	if err != nil {
@@ -94,22 +95,6 @@ func (p MessageServiceImpl) CreateTopicWithSchema(topic string, tc pubsub.TopicC
 	}
 }
 
-func (p MessageServiceImpl) RetrieveTopic(topicId string) (*pubsub.Topic, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	defer cancel()
-	t := p.C.Topic(topicId)
-	log.Println(t.String())
-	b, err := t.Exists(ctx)
-	log.Println(b)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve topic: %v , err: %v", topicId, err)
-	} else if !b {
-		return nil, fmt.Errorf("topic %v is not found in your project, please create it if you are going to maintain it", topicId)
-	}
-
-	return t, nil
-}
 func (p MessageServiceImpl) GetTopic(ctx context.Context, topicId string) (*pubsub.Topic, error) {
 	t := p.C.Topic(topicId)
 

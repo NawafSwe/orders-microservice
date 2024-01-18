@@ -1,7 +1,7 @@
 package main
 
+import "C"
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"flag"
 	"fmt"
@@ -12,6 +12,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"reflect"
 	"sync"
 
 	"github.com/joho/godotenv"
@@ -57,12 +58,17 @@ func main() {
 		log.Fatalf("failed to connect to pub sub, err: %v\n", err)
 	}
 	// on main exist make sure to prevent resources leaks and close the connection of pubsub client
-	defer func(C *pubsub.Client) {
-		err := C.Close()
-		if err != nil {
-
+	defer func(service messaging.MessageService) {
+		v, ok := service.(messaging.MessageServiceImpl)
+		if ok {
+			err := v.C.Close()
+			if err != nil {
+				log.Printf("failed to close the messaging client connection, err: %v\n", err)
+			}
+			return
 		}
-	}(ps.C)
+		log.Printf("failed to assert the type of messaging service, expected MessageServiceImpl struct but recived %v\n", reflect.TypeOf(service))
+	}(ps)
 
 	ordersRepo := repo.NewOrderRepo(dbConn)
 	orderUseCase := usecase.NewOrderUseCase(ordersRepo, ps)
