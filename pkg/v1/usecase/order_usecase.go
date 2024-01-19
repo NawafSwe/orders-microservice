@@ -70,30 +70,10 @@ func (u OrderUseCaseImpl) PublishOrderCreatedEvent(order *pb.Order) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	topicId := "orderCreated"
-	t, err := u.pubSubClient.GetTopic(ctx, topicId)
+	err = u.pubSubClient.Publish(ctx, "orderCreated", &pubsub.Message{Data: data})
 	if err != nil {
-		log.Printf("error occurred while getting topic %v, err: %v", topicId, err)
+		log.Printf("failed to publush orderCratedEvent, err: %v", err)
 	}
-
-	t.Publish(ctx, &pubsub.Message{
-		Data: data,
-	})
-	//		t.Publish(ctx, &pubsub.Message{
-	//			Data: msg,
-	//		})
-	//		// no need to wait for publish operation
-	//		//go func(result *pubsub.PublishResult) {
-	//		//	ctx, cancel := context.WithCancel(context.Background())
-	//		//	defer cancel()
-	//		//	id, err := result.Get(ctx)
-	//		//
-	//		//	if err != nil {
-	//		//		log.Printf("failed to publish order created event, err: %v\n", err)
-	//		//	}
-	//		//	log.Printf("successfully published orderCreatedEvent, msg id: %v", id)
-	//		//}(result)
-	//	}
 
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
@@ -164,14 +144,11 @@ func (u OrderUseCaseImpl) PublishOrderStatusChanged(order models.Order) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	t, err := u.pubSubClient.GetTopic(ctx, "orderStatusChanged")
+	err = u.pubSubClient.Publish(ctx, "orderStatusChanged", &pubsub.Message{
+		Data: data,
+	})
 	if err != nil {
 		log.Printf("could not publish event, due to err: %v\n", err)
 		return
 	}
-
-	// publish status update
-	t.Publish(ctx, &pubsub.Message{
-		Data: data,
-	})
 }
