@@ -34,13 +34,9 @@ func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (m
 	if err != nil {
 		return models.Order{}, err
 	}
-	go func() {
-		u.PublishOrderCreatedEvent(o)
-	}()
+	u.PublishOrderCreatedEvent(o)
 
-	go func() {
-		u.PublishOrderStatusChanged(order)
-	}()
+	u.PublishOrderStatusChanged(order)
 	return o, nil
 }
 
@@ -70,10 +66,12 @@ func (u OrderUseCaseImpl) PublishOrderCreatedEvent(order models.Order) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err = u.pubSubClient.Publish(ctx, "orderCreated", &pubsub.Message{Data: data})
-	if err != nil {
-		log.Printf("failed to publush orderCratedEvent, err: %v", err)
-	}
+	go func() {
+		err = u.pubSubClient.Publish(ctx, "orderCreated", &pubsub.Message{Data: data})
+		if err != nil {
+			log.Printf("failed to publush orderCratedEvent, err: %v", err)
+		}
+	}()
 
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
@@ -144,11 +142,14 @@ func (u OrderUseCaseImpl) PublishOrderStatusChanged(order models.Order) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err = u.pubSubClient.Publish(ctx, "orderStatusChanged", &pubsub.Message{
-		Data: data,
-	})
-	if err != nil {
-		log.Printf("could not publish event, due to err: %v\n", err)
-		return
-	}
+	go func() {
+		err = u.pubSubClient.Publish(ctx, "orderStatusChanged", &pubsub.Message{
+			Data: data,
+		})
+		if err != nil {
+			log.Printf("could not publish event, due to err: %v\n", err)
+			return
+		}
+	}()
+
 }
