@@ -21,6 +21,7 @@ type MessageReceiver interface {
 // Would embed MessageSender, MessageReceiver
 
 type MessageService interface {
+	MessageSender
 	CreateSub(id string, topic *pubsub.Topic)
 	CreateTopic(topic string) *pubsub.Topic
 	GetSubscription(ctx context.Context, id string) (*pubsub.Subscription, error)
@@ -116,4 +117,29 @@ func (p MessageServiceImpl) GetSubscription(ctx context.Context, id string) (*pu
 		return nil, fmt.Errorf("subscription:%v not found", id)
 	}
 	return s, nil
+}
+
+func (p MessageServiceImpl) Publish(ctx context.Context, topicId string, msg *pubsub.Message) error {
+	t, err := p.GetTopic(ctx, topicId)
+	if err != nil {
+		return fmt.Errorf("publish message on topic %s, err: %w", topicId, err)
+	}
+	t.Publish(ctx, msg)
+
+	//		t.Publish(ctx, &pubsub.Message{
+	//			Data: msg,
+	//		})
+	//		// no need to wait for publish operation
+	//		//go func(result *pubsub.PublishResult) {
+	//		//	ctx, cancel := context.WithCancel(context.Background())
+	//		//	defer cancel()
+	//		//	id, err := result.Get(ctx)
+	//		//
+	//		//	if err != nil {
+	//		//		log.Printf("failed to publish order created event, err: %v\n", err)
+	//		//	}
+	//		//	log.Printf("successfully published orderCreatedEvent, msg id: %v", id)
+	//		//}(result)
+	//	}
+	return nil
 }
