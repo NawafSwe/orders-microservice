@@ -10,7 +10,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 	"slices"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestOrderUseCase(t *testing.T) {
@@ -87,16 +89,28 @@ func TestOrderUseCase(t *testing.T) {
 				pubSubMock.On("Publish", mock.Anything, "orderCreated", mock.Anything).Return(nil)
 				pubSubMock.On("Publish", mock.Anything, "orderStatusChanged", mock.Anything).Return(nil)
 			}
-			result, err := ordersUseCase.PlaceOrder(ctx, test.Input)
-			if err == nil && test.ExpectedErr != nil {
-				t.Errorf("expected error from %s is %v but got %v", name, test.ExpectedErr, err)
-			}
-			if result.ID != test.ExpectedResult.ID {
-				t.Errorf("expected order id is %v, but got %v", test.ExpectedResult.ID, result.ID)
-			}
-			if !slices.Equal(result.Items, test.ExpectedResult.Items) {
-				t.Errorf("created items not matched, expected is %v, but got %v", test.ExpectedResult.Items, result.Items)
-			}
+			// hacky way to assert goroutines got called
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				result, err := ordersUseCase.PlaceOrder(ctx, test.Input)
+				if err == nil && test.ExpectedErr != nil {
+					t.Errorf("expected error from %s is %v but got %v", name, test.ExpectedErr, err)
+				}
+				if result.ID != test.ExpectedResult.ID {
+					t.Errorf("expected order id is %v, but got %v", test.ExpectedResult.ID, result.ID)
+				}
+				if !slices.Equal(result.Items, test.ExpectedResult.Items) {
+					t.Errorf("created items not matched, expected is %v, but got %v", test.ExpectedResult.Items, result.Items)
+				}
+			}()
+			go func() {
+				defer wg.Done()
+				time.Sleep(time.Second * 1)
+			}()
+			wg.Wait()
 			// Assert mocks
 			if test.ExpectedErr == nil {
 				ordersRepoMock.AssertExpectations(t)
