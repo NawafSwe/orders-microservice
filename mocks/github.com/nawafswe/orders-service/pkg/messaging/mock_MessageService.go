@@ -5,7 +5,7 @@ package messaging
 import (
 	context "context"
 
-	internalpubsub "cloud.google.com/go/internal/pubsub"
+	internalpubsub "cloud.google.com/go/pubsub"
 
 	mock "github.com/stretchr/testify/mock"
 
