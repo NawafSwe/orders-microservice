@@ -35,7 +35,7 @@ func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (m
 		return models.Order{}, err
 	}
 	go func() {
-		u.PublishOrderCreatedEvent(grpc.FromDomain(o))
+		u.PublishOrderCreatedEvent(o)
 	}()
 
 	go func() {
@@ -62,8 +62,8 @@ func (u OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, 
 
 // Maybe Moving this logic into saga?, probably I need to do research about it
 
-func (u OrderUseCaseImpl) PublishOrderCreatedEvent(order *pb.Order) {
-	data, err := proto.Marshal(order)
+func (u OrderUseCaseImpl) PublishOrderCreatedEvent(order models.Order) {
+	data, err := proto.Marshal(grpc.FromDomain(order))
 	if err != nil {
 		log.Printf("error occured while marshling order data, err: %v\n", err)
 	}
