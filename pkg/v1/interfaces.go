@@ -15,6 +15,6 @@ type OrderUseCase interface {
 	UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error)
 	HandleOrderApproval(ctx context.Context)
 	HandleOrderRejection(ctx context.Context)
-	PublishOrderStatusChanged(order models.Order)
-	PublishOrderCreatedEvent(order models.Order)
+	PublishOrderStatusChanged(ctx context.Context, order models.Order)
+	PublishOrderCreatedEvent(ctx context.Context, order models.Order)
 }

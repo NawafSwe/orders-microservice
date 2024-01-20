@@ -11,7 +11,7 @@ import (
 )
 
 type MessageSender interface {
-	Publish(ctx context.Context, topic string, msg *pubsub.Message) error
+	PublishAsync(ctx context.Context, topic string, msg *pubsub.Message)
 }
 
 type MessageReceiver interface {
@@ -119,27 +119,20 @@ func (p MessageServiceImpl) GetSubscription(ctx context.Context, id string) (*pu
 	return s, nil
 }
 
-func (p MessageServiceImpl) Publish(ctx context.Context, topicId string, msg *pubsub.Message) error {
+func (p MessageServiceImpl) PublishAsync(ctx context.Context, topicId string, msg *pubsub.Message) {
 	t, err := p.GetTopic(ctx, topicId)
 	if err != nil {
-		return fmt.Errorf("publish message on topic %s, err: %w", topicId, err)
+		log.Printf("publish message on topic %s, err: %v\n", topicId, err)
+		return
 	}
-	t.Publish(ctx, msg)
-
-	//		t.Publish(ctx, &pubsub.Message{
-	//			Data: msg,
-	//		})
-	//		// no need to wait for publish operation
-	//		//go func(result *pubsub.PublishResult) {
-	//		//	ctx, cancel := context.WithCancel(context.Background())
-	//		//	defer cancel()
-	//		//	id, err := result.Get(ctx)
-	//		//
-	//		//	if err != nil {
-	//		//		log.Printf("failed to publish order created event, err: %v\n", err)
-	//		//	}
-	//		//	log.Printf("successfully published orderCreatedEvent, msg id: %v", id)
-	//		//}(result)
-	//	}
-	return nil
+	result := t.Publish(ctx, msg)
+	ctxWithValue := context.WithValue(context.Background(), "topicId", topicId)
+	ctx, cancel := context.WithTimeout(ctxWithValue, time.Second*3)
+	go func() {
+		defer cancel()
+		srvId, err := result.Get(ctx)
+		if err != nil {
+			log.Printf("failed to publish message with ID: %v\n, srvId: %v, err: %v", msg.ID, srvId, err)
+		}
+	}()
 }

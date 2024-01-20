@@ -259,50 +259,37 @@ func (_c *MockMessageService_GetTopic_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
-// Publish provides a mock function with given fields: ctx, topic, msg
-func (_m *MockMessageService) Publish(ctx context.Context, topic string, msg *internalpubsub.Message) error {
-	ret := _m.Called(ctx, topic, msg)
-
-	if len(ret) == 0 {
-		panic("no return value specified for Publish")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, *internalpubsub.Message) error); ok {
-		r0 = rf(ctx, topic, msg)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+// PublishAsync provides a mock function with given fields: ctx, topic, msg
+func (_m *MockMessageService) PublishAsync(ctx context.Context, topic string, msg *internalpubsub.Message) {
+	_m.Called(ctx, topic, msg)
 }
 
-// MockMessageService_Publish_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Publish'
-type MockMessageService_Publish_Call struct {
+// MockMessageService_PublishAsync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishAsync'
+type MockMessageService_PublishAsync_Call struct {
 	*mock.Call
 }
 
-// Publish is a helper method to define mock.On call
+// PublishAsync is a helper method to define mock.On call
 //   - ctx context.Context
 //   - topic string
 //   - msg *internalpubsub.Message
-func (_e *MockMessageService_Expecter) Publish(ctx interface{}, topic interface{}, msg interface{}) *MockMessageService_Publish_Call {
-	return &MockMessageService_Publish_Call{Call: _e.mock.On("Publish", ctx, topic, msg)}
+func (_e *MockMessageService_Expecter) PublishAsync(ctx interface{}, topic interface{}, msg interface{}) *MockMessageService_PublishAsync_Call {
+	return &MockMessageService_PublishAsync_Call{Call: _e.mock.On("PublishAsync", ctx, topic, msg)}
 }
 
-func (_c *MockMessageService_Publish_Call) Run(run func(ctx context.Context, topic string, msg *internalpubsub.Message)) *MockMessageService_Publish_Call {
+func (_c *MockMessageService_PublishAsync_Call) Run(run func(ctx context.Context, topic string, msg *internalpubsub.Message)) *MockMessageService_PublishAsync_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(*internalpubsub.Message))
 	})
 	return _c
 }
 
-func (_c *MockMessageService_Publish_Call) Return(_a0 error) *MockMessageService_Publish_Call {
-	_c.Call.Return(_a0)
+func (_c *MockMessageService_PublishAsync_Call) Return() *MockMessageService_PublishAsync_Call {
+	_c.Call.Return()
 	return _c
 }
 
-func (_c *MockMessageService_Publish_Call) RunAndReturn(run func(context.Context, string, *internalpubsub.Message) error) *MockMessageService_Publish_Call {
+func (_c *MockMessageService_PublishAsync_Call) RunAndReturn(run func(context.Context, string, *internalpubsub.Message)) *MockMessageService_PublishAsync_Call {
 	_c.Call.Return(run)
 	return _c
 }
