@@ -13,6 +13,9 @@ import (
 	"log"
 )
 
+// TODO: implement Logging using datadog
+// TODO: implement custom error for better handling
+
 type OrderUseCaseImpl struct {
 	repo interfaces.OrderRepo
 	// define an interface for messaging once you segregate business logic for publishing events and handling events from there
