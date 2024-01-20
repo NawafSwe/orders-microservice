@@ -145,9 +145,9 @@ func (_c *MockOrderUseCase_PlaceOrder_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
-// PublishOrderCreatedEvent provides a mock function with given fields: order
-func (_m *MockOrderUseCase) PublishOrderCreatedEvent(order models.Order) {
-	_m.Called(order)
+// PublishOrderCreatedEvent provides a mock function with given fields: ctx, order
+func (_m *MockOrderUseCase) PublishOrderCreatedEvent(ctx context.Context, order models.Order) {
+	_m.Called(ctx, order)
 }
 
 // MockOrderUseCase_PublishOrderCreatedEvent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishOrderCreatedEvent'
@@ -156,14 +156,15 @@ type MockOrderUseCase_PublishOrderCreatedEvent_Call struct {
 }
 
 // PublishOrderCreatedEvent is a helper method to define mock.On call
+//   - ctx context.Context
 //   - order models.Order
-func (_e *MockOrderUseCase_Expecter) PublishOrderCreatedEvent(order interface{}) *MockOrderUseCase_PublishOrderCreatedEvent_Call {
-	return &MockOrderUseCase_PublishOrderCreatedEvent_Call{Call: _e.mock.On("PublishOrderCreatedEvent", order)}
+func (_e *MockOrderUseCase_Expecter) PublishOrderCreatedEvent(ctx interface{}, order interface{}) *MockOrderUseCase_PublishOrderCreatedEvent_Call {
+	return &MockOrderUseCase_PublishOrderCreatedEvent_Call{Call: _e.mock.On("PublishOrderCreatedEvent", ctx, order)}
 }
 
-func (_c *MockOrderUseCase_PublishOrderCreatedEvent_Call) Run(run func(order models.Order)) *MockOrderUseCase_PublishOrderCreatedEvent_Call {
+func (_c *MockOrderUseCase_PublishOrderCreatedEvent_Call) Run(run func(ctx context.Context, order models.Order)) *MockOrderUseCase_PublishOrderCreatedEvent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(models.Order))
+		run(args[0].(context.Context), args[1].(models.Order))
 	})
 	return _c
 }
@@ -173,14 +174,14 @@ func (_c *MockOrderUseCase_PublishOrderCreatedEvent_Call) Return() *MockOrderUse
 	return _c
 }
 
-func (_c *MockOrderUseCase_PublishOrderCreatedEvent_Call) RunAndReturn(run func(models.Order)) *MockOrderUseCase_PublishOrderCreatedEvent_Call {
+func (_c *MockOrderUseCase_PublishOrderCreatedEvent_Call) RunAndReturn(run func(context.Context, models.Order)) *MockOrderUseCase_PublishOrderCreatedEvent_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// PublishOrderStatusChanged provides a mock function with given fields: order
-func (_m *MockOrderUseCase) PublishOrderStatusChanged(order models.Order) {
-	_m.Called(order)
+// PublishOrderStatusChanged provides a mock function with given fields: ctx, order
+func (_m *MockOrderUseCase) PublishOrderStatusChanged(ctx context.Context, order models.Order) {
+	_m.Called(ctx, order)
 }
 
 // MockOrderUseCase_PublishOrderStatusChanged_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishOrderStatusChanged'
@@ -189,14 +190,15 @@ type MockOrderUseCase_PublishOrderStatusChanged_Call struct {
 }
 
 // PublishOrderStatusChanged is a helper method to define mock.On call
+//   - ctx context.Context
 //   - order models.Order
-func (_e *MockOrderUseCase_Expecter) PublishOrderStatusChanged(order interface{}) *MockOrderUseCase_PublishOrderStatusChanged_Call {
-	return &MockOrderUseCase_PublishOrderStatusChanged_Call{Call: _e.mock.On("PublishOrderStatusChanged", order)}
+func (_e *MockOrderUseCase_Expecter) PublishOrderStatusChanged(ctx interface{}, order interface{}) *MockOrderUseCase_PublishOrderStatusChanged_Call {
+	return &MockOrderUseCase_PublishOrderStatusChanged_Call{Call: _e.mock.On("PublishOrderStatusChanged", ctx, order)}
 }
 
-func (_c *MockOrderUseCase_PublishOrderStatusChanged_Call) Run(run func(order models.Order)) *MockOrderUseCase_PublishOrderStatusChanged_Call {
+func (_c *MockOrderUseCase_PublishOrderStatusChanged_Call) Run(run func(ctx context.Context, order models.Order)) *MockOrderUseCase_PublishOrderStatusChanged_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(models.Order))
+		run(args[0].(context.Context), args[1].(models.Order))
 	})
 	return _c
 }
@@ -206,7 +208,7 @@ func (_c *MockOrderUseCase_PublishOrderStatusChanged_Call) Return() *MockOrderUs
 	return _c
 }
 
-func (_c *MockOrderUseCase_PublishOrderStatusChanged_Call) RunAndReturn(run func(models.Order)) *MockOrderUseCase_PublishOrderStatusChanged_Call {
+func (_c *MockOrderUseCase_PublishOrderStatusChanged_Call) RunAndReturn(run func(context.Context, models.Order)) *MockOrderUseCase_PublishOrderStatusChanged_Call {
 	_c.Call.Return(run)
 	return _c
 }
