@@ -34,13 +34,11 @@ func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (m
 	if err != nil {
 		return models.Order{}, err
 	}
-	go func() {
-		u.PublishOrderCreatedEvent(o)
-	}()
 
-	go func() {
-		u.PublishOrderStatusChanged(order)
-	}()
+	u.PublishOrderCreatedEvent(ctx, o)
+
+	u.PublishOrderStatusChanged(ctx, order)
+
 	return o, nil
 }
 
@@ -56,25 +54,19 @@ func (u OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, 
 
 	go func() {
 		defer cancel()
-		u.PublishOrderStatusChanged(o)
+		u.PublishOrderStatusChanged(ctx, o)
 	}()
 	return o, nil
 }
 
 // Maybe Moving this logic into saga?, probably I need to do research about it
 
-func (u OrderUseCaseImpl) PublishOrderCreatedEvent(order models.Order) {
+func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order models.Order) {
 	data, err := proto.Marshal(grpc.FromDomain(order))
 	if err != nil {
 		log.Printf("error occured while marshling order data, err: %v\n", err)
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	err = u.pubSubClient.Publish(ctx, "orderCreated", &pubsub.Message{Data: data})
-	if err != nil {
-		log.Printf("failed to publush orderCratedEvent, err: %v", err)
-	}
+	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{Data: data})
 
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
@@ -136,21 +128,15 @@ func (u OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 
 }
 
-func (u OrderUseCaseImpl) PublishOrderStatusChanged(order models.Order) {
+func (u OrderUseCaseImpl) PublishOrderStatusChanged(ctx context.Context, order models.Order) {
 	orderPb := pb.OrderStatus{OrderId: int64(order.ID), Status: order.Status}
 	data, err := proto.Marshal(&orderPb)
 	if err != nil {
 		log.Printf("failed to marshal message, err: %v\n", err)
 		return
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	err = u.pubSubClient.Publish(ctx, "orderStatusChanged", &pubsub.Message{
+	u.pubSubClient.PublishAsync(ctx, "orderStatusChanged", &pubsub.Message{
 		Data: data,
 	})
-	if err != nil {
-		log.Printf("could not publish event, due to err: %v\n", err)
-		return
-	}
 
 }
