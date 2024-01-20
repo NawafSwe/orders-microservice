@@ -200,3 +200,49 @@ func TestUpdateOrderStatusUseCase(t *testing.T) {
 		})
 	}
 }
+
+//Handlers already been tested because I am reusing the functionality
+//func TestHandleOrderApprovalUseCase(t *testing.T) {
+//	tests := map[string]struct {
+//		Description    string
+//		ExpectedResult models.Order
+//		ExpectedErr    error
+//	}{
+//		"SuccessfullyHandleOrderApproval": {
+//			Description: "Should successfully handle order approval from a published message on topic orderApproved",
+//			ExpectedResult: models.Order{
+//				Model:      gorm.Model{ID: 1},
+//				CustomerId: 1,
+//				GrandTotal: 10,
+//				Status:     "Approved",
+//				Items: []models.OrderedItem{
+//					{
+//						Model:           gorm.Model{ID: 1},
+//						OrderedItemId:   1,
+//						Sku:             "pepsi12s",
+//						Price:           10,
+//						OrderedQuantity: 1,
+//					},
+//				},
+//			},
+//		},
+//	}
+//
+//	for name, test := range tests {
+//		t.Run(name, func(t *testing.T) {
+//			t.Logf("Running %v ", name)
+//			pubSubMocks := messagesMock.NewMockMessageService(t)
+//			ordersRepoMocks := ordersMock.NewMockOrderRepo(t)
+//			orderUseCase := useCases.NewOrderUseCase(ordersRepoMocks, pubSubMocks)
+//
+//			ctx, cancel:= context.WithCancel(context.Background())
+//			defer cancel()
+//			if test.ExpectedErr == nil {
+//				ordersRepoMocks.On("Update", mock.Anything)
+//			}
+//			orderUseCase.HandleOrderApproval(ctx)
+//
+//
+//		})
+//	}
+//}
