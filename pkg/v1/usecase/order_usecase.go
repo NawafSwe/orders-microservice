@@ -36,26 +36,20 @@ func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (m
 	}
 
 	u.PublishOrderCreatedEvent(ctx, o)
-
 	u.PublishOrderStatusChanged(ctx, order)
-
 	return o, nil
 }
 
 func (u OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, status string) (models.Order, error) {
+	if status == "" {
+		return models.Order{}, models.InvalidStatusChangeErr{Message: fmt.Sprintf("given status '%v' is invalid", status)}
+	}
 	o, err := u.repo.UpdateOrderStatus(ctx, orderId, status)
 	if err != nil {
 		return models.Order{}, err
 	}
-	// the reason to use a new context here, because this function could be used by external grpc call
-	// once returning to caller, the context will be cancelled, to assure we resume publishing this event
-	// we used long-lived context.
-	ctx, cancel := context.WithCancel(context.Background())
+	u.PublishOrderStatusChanged(ctx, o)
 
-	go func() {
-		defer cancel()
-		u.PublishOrderStatusChanged(ctx, o)
-	}()
 	return o, nil
 }
 

@@ -1,10 +1,12 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type OrderStatus int
 
-// iota starts from zero and it increment by one for each
+// iota starts from zero, and it increments by one for each
 // you can manually set it for other fields
 // once this block is created iota is set back to zero
 const (
@@ -21,4 +23,12 @@ type Order struct {
 	Status     string
 	GrandTotal float64
 	Items      []OrderedItem `gorm:"foreignKey:order_id"` // one to many
+}
+
+type InvalidStatusChangeErr struct {
+	Message string
+}
+
+func (i InvalidStatusChangeErr) Error() string {
+	return i.Message
 }
