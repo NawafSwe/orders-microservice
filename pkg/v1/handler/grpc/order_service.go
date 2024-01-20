@@ -82,6 +82,14 @@ func FromDomain(o models.Order) *pb.Order {
 	}
 }
 
+type InvalidCreateOrderRequest struct {
+	Errs []error
+}
+
+func (i InvalidCreateOrderRequest) Error() string {
+	return errors.Join(i.Errs...).Error()
+}
+
 // Validating order creation request before start to process it.
 func validateOrderCreationRequest(o *pb.Order) error {
 	var errs []error
@@ -112,7 +120,7 @@ func validateOrderCreationRequest(o *pb.Order) error {
 		errs = append(errs, errors.New("the customer id must be supplied"))
 	}
 	if errs != nil {
-		return errors.Join(errs...)
+		return InvalidCreateOrderRequest{Errs: errs}
 	}
 	return nil
 

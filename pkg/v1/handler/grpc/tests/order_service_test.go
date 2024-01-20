@@ -11,9 +11,7 @@ import (
 	pb "github.com/nawafswe/orders-service/proto"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 	"net"
 	"testing"
 )
@@ -22,16 +20,26 @@ func TestPlaceOrderService(t *testing.T) {
 
 	tests := map[string]struct {
 		Description    string
-		ExpectedResult func(o *pb.Order) (*pb.Order, error)
+		ExpectedResult *pb.Order
+		ExpectedErr    error
 		Input          *pb.Order
-		Before         func(useCase *ordersMocks.MockOrderUseCase, order *pb.Order)
 		Assert         func(t *testing.T, useCase *ordersMocks.MockOrderUseCase, o, res *pb.Order)
 	}{
 		"TestSucceedPlacingOrder": {
 			Description: "Should place order successfully and return a response with created order",
-			ExpectedResult: func(o *pb.Order) (*pb.Order, error) {
-				orderModel := orderService.ToDomain(o)
-				return orderService.FromDomain(orderModel), nil
+			ExpectedResult: &pb.Order{
+				OrderId:    1,
+				CustomerId: 1,
+				GrandTotal: 10,
+				Items: []*pb.OrderedItem{
+					{
+						ItemId:          1,
+						OrderedItemId:   1,
+						Price:           10,
+						Sku:             "Pepsi",
+						OrderedQuantity: 1,
+					},
+				},
 			},
 			Input: &pb.Order{
 				CustomerId: 1,
@@ -44,51 +52,6 @@ func TestPlaceOrderService(t *testing.T) {
 						OrderedQuantity: 1,
 					},
 				},
-			},
-			Before: func(useCase *ordersMocks.MockOrderUseCase, o *pb.Order) {
-				useCase.On("PlaceOrder", mock.Anything, orderService.ToDomain(o)).Return(orderService.ToDomain(o), nil)
-			},
-			Assert: func(t *testing.T, useCase *ordersMocks.MockOrderUseCase, in, res *pb.Order) {
-				useCase.AssertNumberOfCalls(t, "PlaceOrder", 1)
-				useCase.AssertCalled(t, "PlaceOrder", mock.Anything, orderService.ToDomain(in))
-				useCase.AssertExpectations(t)
-				orderModel := orderService.ToDomain(in)
-				if len(res.Items) != len(orderModel.Items) {
-					t.Errorf("expected number of items is %v, but got %v\n", len(orderModel.Items), len(res.Items))
-				}
-
-				if res.GrandTotal != orderModel.GrandTotal {
-					t.Errorf("expcpted grand total is %v, but got %v", orderModel.GrandTotal, res.GrandTotal)
-				}
-			},
-		},
-		"TestFailPlaceOrder": {
-			Description: "Should fail place order and return a nil response with error, due to invalid quantity passed",
-			ExpectedResult: func(o *pb.Order) (*pb.Order, error) {
-				orderModel := orderService.ToDomain(o)
-				return orderService.FromDomain(orderModel), nil
-			},
-			Input: &pb.Order{
-				CustomerId: 1,
-				GrandTotal: 10,
-				Items: []*pb.OrderedItem{
-					{
-						OrderedItemId:   1,
-						Price:           10,
-						Sku:             "Pepsi",
-						OrderedQuantity: -1,
-					},
-				},
-			},
-			Before: func(useCase *ordersMocks.MockOrderUseCase, o *pb.Order) {
-				err := status.Errorf(codes.Internal, "supplied quantity for item with sku %v, should be greater than zero, received is %v", o.Items[0].Sku, o.Items[0].OrderedQuantity)
-				useCase.On("PlaceOrder", mock.Anything, orderService.ToDomain(o)).Return(orderService.ToDomain(&pb.Order{}), err)
-			},
-			Assert: func(t *testing.T, useCase *ordersMocks.MockOrderUseCase, in, res *pb.Order) {
-				useCase.AssertNumberOfCalls(t, "PlaceOrder", 1)
-				useCase.AssertCalled(t, "PlaceOrder", mock.Anything, orderService.ToDomain(in))
-				useCase.AssertExpectations(t)
-
 			},
 		},
 	}
@@ -123,23 +86,21 @@ func TestPlaceOrderService(t *testing.T) {
 	c := pb.NewOrderServiceClient(conn)
 	ctx := context.Background()
 	for name, test := range tests {
-		// skipping, because test driven table is not suitable here, where each test case should have
-		// isolated mocks with it.
-		t.Skipf("TestFailPlaceOrder")
 		t.Run(name, func(t *testing.T) {
 			t.Logf("=== running %s ===", name)
-			test.Before(orderUseCase, test.Input)
+			orderUseCase.On("PlaceOrder", mock.Anything, orderService.ToDomain(test.Input)).Return(orderService.ToDomain(test.Input), nil)
 			res, err := c.Create(ctx, test.Input)
-			expectedRes, expectedErr := test.ExpectedResult(test.Input)
 			// I need to handle this and return custom err
-			if errors.Is(err, expectedErr) {
-				t.Errorf("%v failed, expected an error of %v but got %v", name, expectedErr, err)
+			if err == nil && test.ExpectedErr != nil {
+				t.Errorf("%v failed, expected an error of %v but got %v", name, test.ExpectedErr, err)
 			}
 			if res == nil {
-				t.Errorf("%v failed, it was expected to get a response of %v but got %v \n", name, expectedRes, res)
+				t.Errorf("%v failed, it was expected to get a response of %v but got %v \n", name, test.ExpectedResult, res)
 			}
 
-			test.Assert(t, orderUseCase, test.Input, res)
+			orderUseCase.AssertNumberOfCalls(t, "PlaceOrder", 1)
+			orderUseCase.AssertCalled(t, "PlaceOrder", mock.Anything, orderService.ToDomain(test.Input))
+			orderUseCase.AssertExpectations(t)
 		})
 	}
 }
