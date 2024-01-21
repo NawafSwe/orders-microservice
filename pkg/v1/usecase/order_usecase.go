@@ -69,7 +69,7 @@ func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order mo
 		msgId = ctx.Value("correlation-id").(string)
 	}
 
-	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{ID: msgId, Data: data})
+	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{Data: data, Attributes: map[string]string{"correlation-id": msgId}})
 
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
@@ -144,8 +144,8 @@ func (u OrderUseCaseImpl) PublishOrderStatusChanged(ctx context.Context, order m
 		msgId = ctx.Value("correlation-id").(string)
 	}
 	u.pubSubClient.PublishAsync(ctx, "orderStatusChanged", &pubsub.Message{
-		ID:   msgId,
-		Data: data,
+		Data:       data,
+		Attributes: map[string]string{"correlation-id": msgId},
 	})
 
 }
