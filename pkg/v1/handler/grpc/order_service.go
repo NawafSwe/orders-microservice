@@ -4,16 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/nawafswe/orders-service/internal/models"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	pb "github.com/nawafswe/orders-service/proto"
+	contextUtils "github.com/nawafswe/orders-service/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"log"
 )
 
 type OrdersServer struct {
@@ -31,7 +29,7 @@ func (s *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, err
 	if err := validateOrderCreationRequest(in); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	ctx = WrapContextWithCorrelationID(ctx)
+	ctx = contextUtils.WrapContextWithCorrelationID(ctx)
 	o, err := s.UseCase.PlaceOrder(ctx, ToDomain(in))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to place a new order, err: %w", err)
@@ -41,7 +39,7 @@ func (s *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, err
 }
 
 func (s *OrdersServer) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*emptypb.Empty, error) {
-	ctx = WrapContextWithCorrelationID(ctx)
+	ctx = contextUtils.WrapContextWithCorrelationID(ctx)
 	_, err := s.UseCase.UpdateOrderStatus(ctx, in.OrderId, in.Status)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error occurred while changing order status, err: %w", err)
@@ -128,18 +126,4 @@ func validateOrderCreationRequest(o *pb.Order) error {
 	}
 	return nil
 
-}
-
-// WrapContextWithCorrelationID
-// a function wraps a given context with correlation-id, if not exist before starting the process
-func WrapContextWithCorrelationID(ctx context.Context) context.Context {
-	md, ok := metadata.FromIncomingContext(ctx)
-	log.Printf("WrapContextWithCorrelationID executed, current metadata: %v, corrleation-id key content: %v \n", md, md["correlation-id"])
-	var correlationId string
-	if ok && len(md["correlation-id"]) > 0 {
-		correlationId = md["correlation-id"][0]
-	} else {
-		correlationId = uuid.New().String()
-	}
-	return context.WithValue(ctx, "correlation-id", correlationId)
 }
