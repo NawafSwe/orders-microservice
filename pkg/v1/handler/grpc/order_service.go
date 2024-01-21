@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/nawafswe/orders-service/internal/models"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	pb "github.com/nawafswe/orders-service/proto"
@@ -28,7 +29,7 @@ func (s *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, err
 	if err := validateOrderCreationRequest(in); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-
+	ctx = WrapContextWithCorrelationID(ctx)
 	o, err := s.UseCase.PlaceOrder(ctx, ToDomain(in))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to place a new order, err: %w", err)
@@ -38,6 +39,7 @@ func (s *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, err
 }
 
 func (s *OrdersServer) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*emptypb.Empty, error) {
+	ctx = WrapContextWithCorrelationID(ctx)
 	_, err := s.UseCase.UpdateOrderStatus(ctx, in.OrderId, in.Status)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error occurred while changing order status, err: %w", err)
@@ -124,4 +126,13 @@ func validateOrderCreationRequest(o *pb.Order) error {
 	}
 	return nil
 
+}
+
+// WrapContextWithCorrelationID
+// a function wraps a given context with correlation-id, if not exist before starting the process
+func WrapContextWithCorrelationID(ctx context.Context) context.Context {
+	if ctx.Value("correlation-id") == nil {
+		ctx = context.WithValue(ctx, "correlation-id", uuid.New().String())
+	}
+	return ctx
 }
