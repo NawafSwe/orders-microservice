@@ -7,7 +7,7 @@ import (
 	"github.com/nawafswe/orders-service/internal/models"
 	"github.com/nawafswe/orders-service/pkg/messaging"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
-	"github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
+	ordersService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
 	pb "github.com/nawafswe/orders-service/proto"
 	"google.golang.org/protobuf/proto"
 	"log"
@@ -37,7 +37,7 @@ func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (m
 	if err != nil {
 		return models.Order{}, err
 	}
-
+	ctx = ordersService.WrapContextWithCorrelationID(ctx)
 	u.PublishOrderCreatedEvent(ctx, o)
 	u.PublishOrderStatusChanged(ctx, order)
 	return o, nil
@@ -59,11 +59,17 @@ func (u OrderUseCaseImpl) UpdateOrderStatus(ctx context.Context, orderId int64, 
 // Maybe Moving this logic into saga?, probably I need to do research about it
 
 func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order models.Order) {
-	data, err := proto.Marshal(grpc.FromDomain(order))
+	data, err := proto.Marshal(ordersService.FromDomain(order))
 	if err != nil {
 		log.Printf("error occured while marshling order data, err: %v\n", err)
 	}
-	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{Data: data})
+	msgId, ok := ctx.Value("correlation-id").(string)
+	if !ok {
+		ctx = ordersService.WrapContextWithCorrelationID(ctx)
+		msgId = ctx.Value("correlation-id").(string)
+	}
+
+	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{ID: msgId, Data: data})
 
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
@@ -132,7 +138,13 @@ func (u OrderUseCaseImpl) PublishOrderStatusChanged(ctx context.Context, order m
 		log.Printf("failed to marshal message, err: %v\n", err)
 		return
 	}
+	msgId, ok := ctx.Value("correlation-id").(string)
+	if !ok {
+		ctx = ordersService.WrapContextWithCorrelationID(ctx)
+		msgId = ctx.Value("correlation-id").(string)
+	}
 	u.pubSubClient.PublishAsync(ctx, "orderStatusChanged", &pubsub.Message{
+		ID:   msgId,
 		Data: data,
 	})
 
