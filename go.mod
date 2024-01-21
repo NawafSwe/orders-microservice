@@ -3,8 +3,8 @@ module github.com/nawafswe/orders-service
 go 1.21.1
 
 require (
-	cloud.google.com/go v0.110.8
 	cloud.google.com/go/pubsub v1.33.0
+	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.60.1
@@ -14,6 +14,7 @@ require (
 )
 
 require (
+	cloud.google.com/go v0.110.8 // indirect
 	cloud.google.com/go/compute v1.23.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.2 // indirect
