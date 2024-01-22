@@ -112,7 +112,7 @@ func (p MessageServiceImpl) GetSubscription(ctx context.Context, id string) (*pu
 	defer cancel()
 	s := p.C.Subscription(id)
 	if b, err := s.Exists(ctx); err != nil {
-		return nil, fmt.Errorf("failed to get subscription, err: %w", err)
+		return nil, fmt.Errorf("failed to get subscription %v, err: %w", id, err)
 	} else if !b {
 		return nil, fmt.Errorf("subscription:%v not found", id)
 	}
