@@ -1,4 +1,4 @@
-package utils
+package wrapper
 
 import (
 	"context"
@@ -7,11 +7,13 @@ import (
 	"log"
 )
 
-// WrapContextWithCorrelationID
+// put this in package called contexts/wrapper.Context(ctx) do the func
+
+// ContextWithCorrelationId
 // a function wraps a given context with correlation-id, if not exist before starting the process
-func WrapContextWithCorrelationID(ctx context.Context) context.Context {
+func ContextWithCorrelationId(ctx context.Context) context.Context {
 	md, ok := metadata.FromIncomingContext(ctx)
-	log.Printf("WrapContextWithCorrelationID executed, current metadata: %v, corrleation-id key content: %v \n", md, md["correlation-id"])
+	log.Printf("ContextWithCorrelationId executed, current metadata: %v, corrleation-id key content: %v \n", md, md["correlation-id"])
 	var correlationId string
 	if ok && len(md["correlation-id"]) > 0 {
 		correlationId = md["correlation-id"][0]

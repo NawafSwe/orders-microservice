@@ -34,6 +34,7 @@ func main() {
 	}
 	var srvOpts []grpc.ServerOption
 	tlsEnabled := os.Getenv("TLS_ENABLED")
+	log.Printf("tlsEnabled: %v\n", tlsEnabled)
 	if b, _ := strconv.ParseBool(tlsEnabled); b {
 		cred, err := credentials.NewServerTLSFromFile("ssl/server.crt", "ssl/server.pem")
 		srvOpts = append(srvOpts, grpc.Creds(cred))
