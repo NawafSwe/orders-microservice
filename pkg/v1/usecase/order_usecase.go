@@ -4,12 +4,12 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
+	"github.com/nawafswe/orders-service/contextWrapper"
 	"github.com/nawafswe/orders-service/internal/models"
 	"github.com/nawafswe/orders-service/pkg/messaging"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	ordersService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
 	pb "github.com/nawafswe/orders-service/proto"
-	contextUtils "github.com/nawafswe/orders-service/wrapper"
 	"google.golang.org/protobuf/proto"
 	"log"
 )
@@ -38,7 +38,7 @@ func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (m
 	if err != nil {
 		return models.Order{}, err
 	}
-	ctx = contextUtils.ContextWithCorrelationId(ctx)
+	ctx = contextWrapper.CorrelationId(ctx)
 	u.PublishOrderCreatedEvent(ctx, o)
 	u.PublishOrderStatusChanged(ctx, order)
 	return o, nil
@@ -66,11 +66,11 @@ func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order mo
 	}
 	msgId, ok := ctx.Value("correlation-id").(string)
 	if !ok {
-		ctx = contextUtils.ContextWithCorrelationId(ctx)
+		ctx = contextWrapper.CorrelationId(ctx)
 		msgId = ctx.Value("correlation-id").(string)
 	}
 
-	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{Data: data, Attributes: map[string]string{"correlation-id": msgId}})
+	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{Data: data, Attributes: map[string]string{"correlation-id": msgId, "service": "orders-1"}})
 
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
@@ -141,12 +141,12 @@ func (u OrderUseCaseImpl) PublishOrderStatusChanged(ctx context.Context, order m
 	}
 	msgId, ok := ctx.Value("correlation-id").(string)
 	if !ok {
-		ctx = contextUtils.ContextWithCorrelationId(ctx)
+		ctx = contextWrapper.CorrelationId(ctx)
 		msgId = ctx.Value("correlation-id").(string)
 	}
 	u.pubSubClient.PublishAsync(ctx, "orderStatusChanged", &pubsub.Message{
 		Data:       data,
-		Attributes: map[string]string{"correlation-id": msgId},
+		Attributes: map[string]string{"correlation-id": msgId, "service": "orders-1"},
 	})
 
 }
