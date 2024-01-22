@@ -22,3 +22,7 @@ func CorrelationId(ctx context.Context) context.Context {
 	}
 	return context.WithValue(ctx, "correlation-id", correlationId)
 }
+
+func WithCorrelationId(ctx context.Context, correlationId string) context.Context {
+	return context.WithValue(ctx, "correlation-id", correlationId)
+}

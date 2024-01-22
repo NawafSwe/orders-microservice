@@ -91,6 +91,9 @@ func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 			msg.Nack()
 			return
 		}
+		if correlationId, ok := msg.Attributes["correlation-id"]; ok {
+			ctx = contextWrapper.WithCorrelationId(ctx, correlationId)
+		}
 		// update order status
 		if _, err := u.UpdateOrderStatus(ctx, orderStatus.OrderId, orderStatus.Status); err != nil {
 			log.Printf("could not handle order approval, error: %v\n", err)
@@ -117,6 +120,9 @@ func (u OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 			log.Printf("failed to unmarshal order status for msgId: %v, err: %v \n", msg.ID, err)
 			msg.Nack()
 			return
+		}
+		if correlationId, ok := msg.Attributes["correlation-id"]; ok {
+			ctx = contextWrapper.WithCorrelationId(ctx, correlationId)
 		}
 		if _, err := u.UpdateOrderStatus(ctx, order.OrderId, order.Status); err != nil {
 			log.Printf("failed to update order status, err: %v\n", err)
