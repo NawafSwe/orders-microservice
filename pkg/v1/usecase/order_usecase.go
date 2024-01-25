@@ -30,7 +30,7 @@ func NewOrderUseCase(repo interfaces.OrderRepo, ps messaging.MessageService) int
 func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (models.Order, error) {
 	for _, i := range order.Items {
 		if i.OrderedQuantity <= 0 {
-			return models.Order{}, fmt.Errorf("supplied quantity for item with sku %v, should be greater than zero, received is %v", i.Sku, i.OrderedQuantity)
+			return models.Order{}, fmt.Errorf("supplied quantity for item with name %v, should be greater than zero, received is %v", i.Name, i.OrderedQuantity)
 
 		}
 	}
