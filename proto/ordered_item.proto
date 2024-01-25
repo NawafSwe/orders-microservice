@@ -8,8 +8,8 @@ option go_package = "github.com/nawafswe/orders-service/proto";
 
 message OrderedItem {
     int64 item_id = 1;
-    int32 ordered_quantity = 2;
-    double price = 3;
-    string sku = 4;
-    int64 ordered_item_id = 5;
+    string name = 2;
+    int64 ordered_item_id = 3;
+    int32 ordered_quantity = 4;
+    double price = 5;
 }
