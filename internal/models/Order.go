@@ -19,10 +19,11 @@ const (
 
 type Order struct {
 	gorm.Model
-	CustomerId int64
-	Status     string
-	GrandTotal float64
-	Items      []OrderedItem `gorm:"foreignKey:order_id"` // one to many
+	CustomerId   int64
+	RestaurantId int64
+	Status       string
+	GrandTotal   float64
+	Items        []OrderedItem `gorm:"foreignKey:order_id"` // one to many
 }
 
 type InvalidStatusChangeErr struct {
