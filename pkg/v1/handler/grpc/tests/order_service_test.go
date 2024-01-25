@@ -3,7 +3,6 @@ package grpc_tests
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/nawafswe/orders-service/internal/models"
 	ordersMocks "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/v1"
@@ -28,27 +27,29 @@ func TestPlaceOrderService(t *testing.T) {
 		"TestSucceedPlacingOrder": {
 			Description: "Should place order successfully and return a response with created order",
 			ExpectedResult: &pb.Order{
-				OrderId:    1,
-				CustomerId: 1,
-				GrandTotal: 10,
+				OrderId:      1,
+				RestaurantId: 1,
+				CustomerId:   1,
+				GrandTotal:   10,
 				Items: []*pb.OrderedItem{
 					{
 						ItemId:          1,
 						OrderedItemId:   1,
 						Price:           10,
-						Sku:             "Pepsi",
+						Name:            "Pepsi",
 						OrderedQuantity: 1,
 					},
 				},
 			},
 			Input: &pb.Order{
-				CustomerId: 1,
-				GrandTotal: 10,
+				CustomerId:   1,
+				RestaurantId: 1,
+				GrandTotal:   10,
 				Items: []*pb.OrderedItem{
 					{
 						OrderedItemId:   1,
 						Price:           10,
-						Sku:             "Pepsi",
+						Name:            "Pepsi",
 						OrderedQuantity: 1,
 					},
 				},
@@ -57,10 +58,10 @@ func TestPlaceOrderService(t *testing.T) {
 	}
 
 	// follow table test pattern, define a map...
-	port := flag.Int("port", 9003, "server port")
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	port := 9003
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		t.Errorf("cannot connect to server on addr: localhost:%v", fmt.Sprintf(":%d", *port))
+		t.Errorf("cannot connect to server on addr: localhost:%v", port)
 	}
 	srv := grpc.NewServer()
 	defer srv.Stop()
@@ -107,21 +108,21 @@ func TestPlaceOrderService(t *testing.T) {
 
 func TestSuccessfullyChangeOrderStatusService(t *testing.T) {
 	orderUseCase := ordersMocks.NewMockOrderUseCase(t)
-	port := flag.Int("port", 9003, "server port")
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	port := 9009
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		t.Errorf("failed to connect to port %d", *port)
+		t.Errorf("failed to connect to port %d", port)
 	}
 	srv := grpc.NewServer()
 	defer srv.Stop()
 	orderService.NewOrderService(srv, orderUseCase)
 	go func() {
 		if err := srv.Serve(lis); err != nil {
-			t.Errorf("failed to start a grpc server on port %d", *port)
+			t.Errorf("failed to start a grpc server on port %d", port)
 		}
 	}()
 	// define client
-	conn, err := grpc.Dial("localhost:9003", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("localhost:9009", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Error("could not establish a connection to the grpc server")
 	}
@@ -144,21 +145,21 @@ func TestSuccessfullyChangeOrderStatusService(t *testing.T) {
 
 func TestFailChangeOrderStatusServiceDueInvalidOrderId(t *testing.T) {
 	orderUseCase := ordersMocks.NewMockOrderUseCase(t)
-	port := flag.Int("port", 9003, "server port")
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	port := 9004
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		t.Errorf("failed to connect to port %d", *port)
+		t.Errorf("failed to connect to port %d", port)
 	}
 	srv := grpc.NewServer()
 	defer srv.Stop()
 	orderService.NewOrderService(srv, orderUseCase)
 	go func() {
 		if err := srv.Serve(lis); err != nil {
-			t.Errorf("failed to start a grpc server on port %d", *port)
+			t.Errorf("failed to start a grpc server on port %d", port)
 		}
 	}()
 	// define client
-	conn, err := grpc.Dial("localhost:9003", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial("localhost:9004", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Error("could not establish a connection to the grpc server")
 	}
