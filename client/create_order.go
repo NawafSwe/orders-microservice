@@ -14,15 +14,16 @@ func createOrder(c proto.OrderServiceClient) {
 		{
 			OrderedItemId:   int64(24),
 			OrderedQuantity: 1,
-			Price:           10.00,
-			Sku:             "XYZ123456",
+			Price:           2.50,
+			Name:            "Pepsi",
 		},
 	}
 	req := &proto.Order{
-		CustomerId: 1,
-		GrandTotal: 10.00,
-		Items:      items,
-		Status:     "New",
+		CustomerId:   1,
+		RestaurantId: 1,
+		GrandTotal:   2.50,
+		Items:        items,
+		Status:       "New",
 	}
 
 	md := metadata.Pairs("correlation-id", uuid.New().String())
