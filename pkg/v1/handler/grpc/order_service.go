@@ -52,15 +52,16 @@ func ToDomain(o *pb.Order) models.Order {
 		items = append(items, models.OrderedItem{
 			OrderedItemId:   i.OrderedItemId,
 			OrderedQuantity: i.OrderedQuantity,
-			Sku:             i.Sku,
+			Name:            i.Name,
 			Price:           i.Price,
 		})
 	}
 	return models.Order{
-		CustomerId: o.CustomerId,
-		Status:     o.Status,
-		GrandTotal: o.GrandTotal,
-		Items:      items,
+		CustomerId:   o.CustomerId,
+		RestaurantId: o.RestaurantId,
+		Status:       o.Status,
+		GrandTotal:   o.GrandTotal,
+		Items:        items,
 	}
 }
 
@@ -71,16 +72,17 @@ func FromDomain(o models.Order) *pb.Order {
 			ItemId:          int64(i.ID),
 			OrderedItemId:   i.OrderedItemId,
 			OrderedQuantity: i.OrderedQuantity,
-			Sku:             i.Sku,
+			Name:            i.Name,
 			Price:           i.Price,
 		})
 	}
 	return &pb.Order{
-		OrderId:    int64(o.ID),
-		CustomerId: o.CustomerId,
-		Status:     o.Status,
-		GrandTotal: o.GrandTotal,
-		Items:      items,
+		OrderId:      int64(o.ID),
+		CustomerId:   o.CustomerId,
+		RestaurantId: o.RestaurantId,
+		Status:       o.Status,
+		GrandTotal:   o.GrandTotal,
+		Items:        items,
 	}
 }
 
@@ -110,16 +112,19 @@ func validateOrderCreationRequest(o *pb.Order) error {
 			errs = append(errs, errors.New("item id should not be initialized"))
 
 		}
-		if i.Sku == "" {
-			errs = append(errs, fmt.Errorf("the sku field is required"))
+		if i.Name == "" {
+			errs = append(errs, fmt.Errorf("the name field is required"))
 		}
 		if i.OrderedQuantity <= 0 {
-			errs = append(errs, fmt.Errorf("the quantity for item with sku %s should be greater than zero", i.Sku))
+			errs = append(errs, fmt.Errorf("the quantity for item with sku %s should be greater than zero", i.Name))
 		}
 	}
 
 	if o.CustomerId <= 0 {
 		errs = append(errs, errors.New("the customer id must be supplied"))
+	}
+	if o.RestaurantId <= 0 {
+		errs = append(errs, errors.New("the restaurant id must be supplied"))
 	}
 	if errs != nil {
 		return InvalidCreateOrderRequest{Errs: errs}
