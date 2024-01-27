@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/nawafswe/orders-service/contextWrapper"
 	"github.com/nawafswe/orders-service/internal/models"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	pb "github.com/nawafswe/orders-service/proto"
@@ -29,7 +28,6 @@ func (s *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, err
 	if err := validateOrderCreationRequest(in); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	ctx = contextWrapper.CorrelationId(ctx)
 	o, err := s.UseCase.PlaceOrder(ctx, ToDomain(in))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to place a new order, err: %w", err)
@@ -39,7 +37,6 @@ func (s *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, err
 }
 
 func (s *OrdersServer) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*emptypb.Empty, error) {
-	ctx = contextWrapper.CorrelationId(ctx)
 	_, err := s.UseCase.UpdateOrderStatus(ctx, in.OrderId, in.Status)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error occurred while changing order status, err: %w", err)
