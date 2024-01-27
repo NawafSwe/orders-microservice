@@ -1,25 +1,24 @@
 package main
 
-import "C"
 import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/nawafswe/orders-service/internal/db"
 	"github.com/nawafswe/orders-service/pkg/messaging"
+	ordersGrpcService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
 	"github.com/nawafswe/orders-service/pkg/v1/repository"
 	"github.com/nawafswe/orders-service/pkg/v1/usecase"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/grpclog"
 	"log"
 	"net"
 	"os"
 	"reflect"
 	"strconv"
 	"sync"
-
-	"github.com/joho/godotenv"
-	ordersGrpcService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 var (
@@ -42,12 +41,13 @@ func main() {
 			log.Fatalf("failed to create server credentials: %v\n", err)
 		}
 	}
-
+	//l := logger.NewLogger()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen on addr:%v\n", lis.Addr())
 	}
-
+	// register middleware to intercept incoming unary requests
+	srvOpts = append(srvOpts, ordersGrpcService.WithServerUnaryInterceptor())
 	s := grpc.NewServer(srvOpts...)
 
 	dbConn, err := db.InitDB()
@@ -101,6 +101,8 @@ func main() {
 	}()
 	go func() {
 		defer wg.Done()
+		grpcLog := grpclog.NewLoggerV2(os.Stdout, os.Stderr, os.Stderr)
+		grpclog.SetLoggerV2(grpcLog)
 		// start serving requests
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)
