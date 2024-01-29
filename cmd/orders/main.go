@@ -55,8 +55,9 @@ func main() {
 		log.Fatalf("failed connecting to the db, err:%v\n", err)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	// generate pub sub client
-	ps := messaging.New(os.Getenv("GOOGLE_PROJECT_ID"))
+	ps := messaging.New(ctx, os.Getenv("GOOGLE_PROJECT_ID"))
 	if err != nil {
 		log.Fatalf("failed to connect to pub sub, err: %v\n", err)
 	}
@@ -89,7 +90,6 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(3)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go func() {
 		defer wg.Done()
@@ -107,8 +107,11 @@ func main() {
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)
 		}
-		defer cancel()
+		defer func() {
+			log.Printf("exiting from the rpc routine\n")
+		}()
 	}()
 
+	defer cancel()
 	wg.Wait()
 }

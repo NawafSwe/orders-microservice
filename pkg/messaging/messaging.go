@@ -32,9 +32,9 @@ type MessageServiceImpl struct {
 	C *pubsub.Client
 }
 
-func New(projectId string) MessageService {
+func New(ctx context.Context, projectId string) MessageService {
 	// we need a longed lived context to maintain client connection, using withCancel or timeout will cause unauthorized error, because the context going to be cancelled
-	c, err := pubsub.NewClient(context.Background(), projectId)
+	c, err := pubsub.NewClient(ctx, projectId)
 	if err != nil {
 		log.Fatalf("failed to obtain a pubsub client for project: %v, err: %v\n", projectId, err)
 	}
@@ -108,7 +108,7 @@ func (p MessageServiceImpl) GetTopic(ctx context.Context, topicId string) (*pubs
 }
 
 func (p MessageServiceImpl) GetSubscription(ctx context.Context, id string) (*pubsub.Subscription, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 	s := p.C.Subscription(id)
 	if b, err := s.Exists(ctx); err != nil {
