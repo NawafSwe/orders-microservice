@@ -81,7 +81,7 @@ func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 		log.Printf("cannot handle order approval at the moment, err: %v\n", err)
 		return
 	}
-
+	log.Println("===== starting to handle order approval events =====")
 	err = approveOrder.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
 		log.Printf("recevied order approval request with msgId: %v\n", msg.ID)
 		var orderStatus pb.OrderStatus
@@ -96,7 +96,7 @@ func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 		}
 		// update order status
 		if _, err := u.UpdateOrderStatus(ctx, orderStatus.OrderId, orderStatus.Status); err != nil {
-			log.Printf("could not handle order approval, error: %v\n", err)
+			log.Printf("could not handle order approval for order: %v, error: %v\n", orderStatus.OrderId, err)
 			msg.Nack()
 			return
 		}
@@ -114,6 +114,7 @@ func (u OrderUseCaseImpl) HandleOrderRejection(ctx context.Context) {
 		log.Printf("failed to get subscription resource, err: %v", err)
 		return
 	}
+	log.Println("===== starting to handle order rejection events =====")
 	err = s.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
 		var order pb.OrderStatus
 		if err := proto.Unmarshal(msg.Data, &order); err != nil {
