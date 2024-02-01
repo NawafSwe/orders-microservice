@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/nawafswe/orders-service/internal/db"
-	"github.com/nawafswe/orders-service/internal/logger"
+	"github.com/nawafswe/orders-service/pkg/logger"
 	"github.com/nawafswe/orders-service/pkg/messaging"
 	ordersGrpcService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
 	"github.com/nawafswe/orders-service/pkg/v1/repository"
@@ -94,7 +94,7 @@ func main() {
 	}(ps)
 
 	ordersRepo := repo.NewOrderRepo(dbConn)
-	orderUseCase := usecase.NewOrderUseCase(ordersRepo, ps)
+	orderUseCase := usecase.NewOrderUseCase(ordersRepo, ps, l)
 	ordersGrpcService.NewOrderService(s, orderUseCase, l)
 
 	log.Printf("successfully connected to pub sub client...\n")

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/nawafswe/orders-service/contextWrapper"
 	"github.com/nawafswe/orders-service/internal/models"
+	"github.com/nawafswe/orders-service/pkg/logger"
 	"github.com/nawafswe/orders-service/pkg/messaging"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	ordersService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
@@ -14,17 +15,15 @@ import (
 	"log"
 )
 
-// TODO: implement Logging using datadog
-// TODO: implement custom error for better handling
-
 type OrderUseCaseImpl struct {
 	repo interfaces.OrderRepo
 	// define an interface for messaging once you segregate business logic for publishing events and handling events from there
 	pubSubClient messaging.MessageService
+	l            logger.Logger
 }
 
-func NewOrderUseCase(repo interfaces.OrderRepo, ps messaging.MessageService) interfaces.OrderUseCase {
-	return OrderUseCaseImpl{repo: repo, pubSubClient: ps}
+func NewOrderUseCase(repo interfaces.OrderRepo, ps messaging.MessageService, l logger.Logger) interfaces.OrderUseCase {
+	return OrderUseCaseImpl{repo: repo, pubSubClient: ps, l: l}
 }
 
 func (u OrderUseCaseImpl) PlaceOrder(ctx context.Context, order models.Order) (models.Order, error) {
