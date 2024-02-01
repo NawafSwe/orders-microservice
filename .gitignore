@@ -36,3 +36,8 @@ Godeps/
 vendor/
 
 ssl
+logs/
+client
+google_service_account.json
+ddagent-install.log
+

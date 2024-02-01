@@ -1,0 +1,29 @@
+version: "3.7"
+
+services:
+  orders-service:
+    container_name: orders-service
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: dev
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    volumes:
+      - .:/src/
+      - ${GOOGLE_SERVICE_PATH}:/src/google_service_account.json
+      - ./app.log:/src/app.log
+
+    labels:
+      #In Datadog Agent 6.8+, source and service default to the short_image tag value.
+      #This allows Datadog to identify the log source for each container and automatically install the corresponding integration.
+      # The container short image name might not match the integration name for custom images,
+      # and can be overwritten to better reflect the name of your application. This can be done with Datadog Autodiscovery
+      # and pod annotations in Kubernetes or container labels.
+      com.datadoghq.ad.logs: '[{"source": "go", "service": "orders-service"}]'
+      com.datadoghq.tags.env: '${DD_ENV}'
+      com.datadoghq.tags.service: 'orders-service'
+      com.datadoghq.tags.version: '1.0.10'
+      my.custom.label.team: 'orders'
