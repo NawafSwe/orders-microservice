@@ -12,7 +12,10 @@ import (
 	ordersService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
 	pb "github.com/nawafswe/orders-service/proto"
 	"google.golang.org/protobuf/proto"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"log"
+	"os"
+	"time"
 )
 
 type OrderUseCaseImpl struct {
@@ -74,15 +77,25 @@ func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order mo
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 	subId := "approveOrder"
+	processName := "HandleOrderApproval"
 	approveOrder, err := u.pubSubClient.GetSubscription(ctx, subId)
 
 	if err != nil {
 		log.Printf("cannot handle order approval at the moment, err: %v\n", err)
 		return
 	}
-	log.Println("===== starting to handle order approval events =====")
+	u.l.Info(map[string]any{
+		"process": processName,
+		"subId":   subId,
+		"time":    time.Now(),
+	}, "starting to handling order approvals requests")
+
 	err = approveOrder.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
-		log.Printf("recevied order approval request with msgId: %v\n", msg.ID)
+		msgId := msg.Attributes["correlation-id"]
+		start := time.Now()
+		span, _ := tracer.StartSpanFromContext(ctx, processName)
+		defer span.Finish()
+
 		var orderStatus pb.OrderStatus
 		if err := proto.Unmarshal(msg.Data, &orderStatus); err != nil {
 			log.Printf("failed to unmarshal message of order status, err: %v\n", err)
@@ -93,12 +106,27 @@ func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 		if correlationId, ok := msg.Attributes["correlation-id"]; ok {
 			ctx = contextWrapper.WithCorrelationId(ctx, correlationId)
 		}
+		u.l.Info(map[string]any{
+			"process":        processName,
+			"context":        fmt.Sprintf("Handling HandleOrderApproval for orderId: %v, corrleation-id: %v", orderStatus.OrderId, msgId),
+			"correlation-id": msgId,
+			"service":        os.Getenv("SERVICE_NAME"),
+			"time":           time.Since(start),
+		}, "Processing incoming order")
 		// update order status
-		if _, err := u.UpdateOrderStatus(ctx, orderStatus.OrderId, orderStatus.Status); err != nil {
+		processedOrder, err := u.UpdateOrderStatus(ctx, orderStatus.OrderId, orderStatus.Status)
+		if err != nil {
 			log.Printf("could not handle order approval for order: %v, error: %v\n", orderStatus.OrderId, err)
 			msg.Nack()
 			return
 		}
+		u.l.Info(map[string]any{
+			"process":        processName,
+			"context":        fmt.Sprintf("restaurantId: %v approved the incoming order %v succesfully", processedOrder.RestaurantId, processedOrder.ID),
+			"correlation-id": msgId,
+			"service":        os.Getenv("SERVICE_NAME"),
+			"time":           time.Since(start),
+		}, "Order processed")
 		msg.Ack()
 	})
 	if err != nil {
