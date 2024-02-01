@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"time"
 )
 
@@ -17,6 +18,8 @@ func ServiceInterceptors(ctx context.Context,
 	start := time.Now()
 	// validate that request has correlation id
 	ctx, err := GetCorrelationIdFromRequest(ctx)
+	span, ctx := tracer.StartSpanFromContext(ctx, info.FullMethod)
+	defer span.Finish()
 	if err != nil {
 		return nil, err
 	}

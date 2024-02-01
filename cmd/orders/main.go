@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"log"
 	"net"
 	"os"
@@ -33,6 +34,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	// enable tracing
+	tracer.Start(
+		tracer.WithEnv(os.Getenv("DD_ENV")),
+		tracer.WithService(os.Getenv("SERVICE_NAME")),
+		tracer.WithServiceVersion(os.Getenv("DD_VERSION")),
+		tracer.WithAgentAddr(os.Getenv("DD_ADDR")),
+	)
+	defer tracer.Stop()
+
 	l := logger.NewLogger()
 	var srvOpts []grpc.ServerOption
 	tlsEnabled := os.Getenv("TLS_ENABLED")
