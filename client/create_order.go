@@ -12,7 +12,7 @@ import (
 func createOrder(c proto.OrderServiceClient) {
 	items := []*proto.OrderedItem{
 		{
-			OrderedItemId:   int64(3),
+			OrderedItemId:   int64(10),
 			OrderedQuantity: 1,
 			Price:           2.50,
 			Name:            "Pepsi",
@@ -20,7 +20,7 @@ func createOrder(c proto.OrderServiceClient) {
 	}
 	req := &proto.Order{
 		CustomerId:   1,
-		RestaurantId: 1,
+		RestaurantId: 33,
 		GrandTotal:   2.50,
 		Items:        items,
 		Status:       "New",

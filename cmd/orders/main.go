@@ -118,7 +118,7 @@ func main() {
 		grpclog.SetLoggerV2(grpcLog)
 		l.Info(map[string]any{
 			"hostname": "localhost-1",
-			"appname":  "restaurants-service",
+			"appname":  "orders-service",
 		}, fmt.Sprintf("service startup at %v ", time.Now().GoString()))
 		// start serving requests
 		if err := s.Serve(lis); err != nil {
