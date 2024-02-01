@@ -15,3 +15,8 @@ packages:
     config:
     interfaces:
       MessageService:
+
+  github.com/nawafswe/orders-service/pkg/logger:
+    config:
+    interfaces:
+        Logger:
