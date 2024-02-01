@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/nawafswe/orders-service/internal/db"
+	"github.com/nawafswe/orders-service/internal/logger"
 	"github.com/nawafswe/orders-service/pkg/messaging"
 	ordersGrpcService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
 	"github.com/nawafswe/orders-service/pkg/v1/repository"
@@ -19,6 +20,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var (
@@ -31,6 +33,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	l := logger.NewLogger()
 	var srvOpts []grpc.ServerOption
 	tlsEnabled := os.Getenv("TLS_ENABLED")
 	log.Printf("tlsEnabled: %v\n", tlsEnabled)
@@ -82,7 +85,7 @@ func main() {
 
 	ordersRepo := repo.NewOrderRepo(dbConn)
 	orderUseCase := usecase.NewOrderUseCase(ordersRepo, ps)
-	ordersGrpcService.NewOrderService(s, orderUseCase)
+	ordersGrpcService.NewOrderService(s, orderUseCase, l)
 
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())
@@ -103,6 +106,10 @@ func main() {
 		defer wg.Done()
 		grpcLog := grpclog.NewLoggerV2(os.Stdout, os.Stderr, os.Stderr)
 		grpclog.SetLoggerV2(grpcLog)
+		l.Info(map[string]any{
+			"hostname": "localhost-1",
+			"appname":  "restaurants-service",
+		}, fmt.Sprintf("service startup at %v ", time.Now().GoString()))
 		// start serving requests
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("error ocurred when spinning a gRPC server, err: %v\n", err)

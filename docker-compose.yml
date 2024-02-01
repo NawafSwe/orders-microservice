@@ -3,19 +3,18 @@ version: "3.7"
 services:
   orders-service:
     container_name: orders-service
+    env_file:
+      - .env
     build:
       dockerfile: Dockerfile
       context: .
       target: dev
-    ports:
-      - "9000:9000"
-    env_file:
-      - .env
     volumes:
       - .:/src/
       - ${GOOGLE_SERVICE_PATH}:/src/google_service_account.json
       - ./app.log:/src/app.log
-
+    ports:
+      - "9000:9000"
     labels:
       #In Datadog Agent 6.8+, source and service default to the short_image tag value.
       #This allows Datadog to identify the log source for each container and automatically install the corresponding integration.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/nawafswe/orders-service/internal/logger"
 	"github.com/nawafswe/orders-service/internal/models"
 	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	pb "github.com/nawafswe/orders-service/proto"
@@ -11,28 +12,39 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"time"
 )
 
 type OrdersServer struct {
 	UseCase interfaces.OrderUseCase
 	pb.UnimplementedOrderServiceServer
+	l logger.Logger
 }
 
-func NewOrderService(s grpc.ServiceRegistrar, u interfaces.OrderUseCase) {
-	pb.RegisterOrderServiceServer(s, &OrdersServer{UseCase: u})
+func NewOrderService(s grpc.ServiceRegistrar, u interfaces.OrderUseCase, l logger.Logger) {
+	pb.RegisterOrderServiceServer(s, &OrdersServer{UseCase: u, l: l})
 }
 
-func (s *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
-	fmt.Printf("OrderService was invoked with Create method, with ctx: %v, in:%v\n", ctx, in)
+func (o *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, error) {
+	start := time.Now()
+	processInfo := map[string]any{
+		"process":        "CreateOrder",
+		"time":           start.GoString(),
+		"correlation-id": ctx.Value("correlation-id"),
+		"input":          in.String(),
+	}
+	o.l.Info(processInfo, "Executing rpc call to create order")
 	//return nil, status.Error(codes.Internal, "could not complete the operation")
 	if err := validateOrderCreationRequest(in); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	o, err := s.UseCase.PlaceOrder(ctx, ToDomain(in))
+	newOrder, err := o.UseCase.PlaceOrder(ctx, ToDomain(in))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to place a new order, err: %w", err)
 	}
-	return FromDomain(o), nil
+	processInfo["createdOrderId"] = newOrder.ID
+	o.l.Info(processInfo, "Finished CreateOrder rpc call")
+	return FromDomain(newOrder), nil
 
 }
 
