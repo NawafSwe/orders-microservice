@@ -49,10 +49,10 @@ func main() {
 	log.Printf("tlsEnabled: %v\n", tlsEnabled)
 	if b, _ := strconv.ParseBool(tlsEnabled); b {
 		cred, err := credentials.NewServerTLSFromFile("ssl/server.crt", "ssl/server.pem")
-		srvOpts = append(srvOpts, grpc.Creds(cred))
 		if err != nil {
 			log.Fatalf("failed to create server credentials: %v\n", err)
 		}
+		srvOpts = append(srvOpts, grpc.Creds(cred))
 	}
 	//l := logger.NewLogger()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
