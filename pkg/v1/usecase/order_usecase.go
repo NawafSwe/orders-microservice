@@ -15,6 +15,7 @@ import (
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -71,8 +72,11 @@ func (u OrderUseCaseImpl) PublishOrderCreatedEvent(ctx context.Context, order mo
 		ctx = contextWrapper.CorrelationId(ctx)
 		msgId = ctx.Value("correlation-id").(string)
 	}
-
-	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{Data: data, Attributes: map[string]string{"correlation-id": msgId, "service": "orders", "host": "localhost"}})
+	span, _ := tracer.SpanFromContext(ctx)
+	u.l.Info(map[string]any{
+		"process": fmt.Sprintf("Publish order created event with spanId %v", span.Context().SpanID()),
+	}, "Publishing message to google pub sub")
+	u.pubSubClient.PublishAsync(ctx, "orderCreated", &pubsub.Message{Data: data, Attributes: map[string]string{"correlation-id": msgId, "service": "orders", "host": "localhost", "spanId": strconv.FormatUint(span.Context().SpanID(), 10)}})
 
 }
 func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
@@ -124,6 +128,7 @@ func (u OrderUseCaseImpl) HandleOrderApproval(ctx context.Context) {
 			"process":        processName,
 			"context":        fmt.Sprintf("restaurantId: %v approved the incoming order %v succesfully", processedOrder.RestaurantId, processedOrder.ID),
 			"correlation-id": msgId,
+			"spanId":         strconv.FormatUint(span.Context().SpanID(), 10),
 			"service":        os.Getenv("SERVICE_NAME"),
 			"time":           time.Since(start),
 		}, "Order processed")
@@ -178,9 +183,10 @@ func (u OrderUseCaseImpl) PublishOrderStatusChanged(ctx context.Context, order m
 		ctx = contextWrapper.CorrelationId(ctx)
 		msgId = ctx.Value("correlation-id").(string)
 	}
+	span, _ := tracer.SpanFromContext(ctx)
 	u.pubSubClient.PublishAsync(ctx, "orderStatusChanged", &pubsub.Message{
 		Data:       data,
-		Attributes: map[string]string{"correlation-id": msgId, "service": "orders", "host": "localhost"},
+		Attributes: map[string]string{"correlation-id": msgId, "service": "orders", "host": "localhost", "spanId": strconv.FormatUint(span.Context().SpanID(), 10)},
 	})
 
 }
