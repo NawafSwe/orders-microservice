@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	interfaces "github.com/nawafswe/orders-service/internal/app/orders"
 	"github.com/nawafswe/orders-service/internal/models"
 	"github.com/nawafswe/orders-service/pkg/logger"
-	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	pb "github.com/nawafswe/orders-service/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -40,7 +40,7 @@ func (o *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, err
 	}
 	newOrder, err := o.UseCase.PlaceOrder(ctx, ToDomain(in))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to place a new order, err: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to place a new order, err: %v", err)
 	}
 	processInfo["createdOrderId"] = newOrder.ID
 	o.l.Info(processInfo, "Finished CreateOrder rpc call")
@@ -51,7 +51,7 @@ func (o *OrdersServer) Create(ctx context.Context, in *pb.Order) (*pb.Order, err
 func (s *OrdersServer) ChangeOrderStatus(ctx context.Context, in *pb.OrderStatus) (*emptypb.Empty, error) {
 	_, err := s.UseCase.UpdateOrderStatus(ctx, in.OrderId, in.Status)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error occurred while changing order status, err: %w", err)
+		return nil, status.Errorf(codes.Internal, "error occurred while changing order status, err: %v", err)
 	}
 	return &emptypb.Empty{}, nil
 }
