@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	interfaces "github.com/nawafswe/orders-service/internal/app/orders"
 	"github.com/nawafswe/orders-service/internal/models"
-	interfaces "github.com/nawafswe/orders-service/pkg/v1"
 	"gorm.io/gorm"
 )
 

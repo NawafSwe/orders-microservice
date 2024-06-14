@@ -5,12 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/joho/godotenv"
+	"github.com/nawafswe/orders-service/internal/app/orders/repository"
+	grpc2 "github.com/nawafswe/orders-service/internal/app/orders/transport/grpc"
+	"github.com/nawafswe/orders-service/internal/app/orders/usecase"
 	"github.com/nawafswe/orders-service/internal/db"
 	"github.com/nawafswe/orders-service/pkg/logger"
 	"github.com/nawafswe/orders-service/pkg/messaging"
-	ordersGrpcService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
-	"github.com/nawafswe/orders-service/pkg/v1/repository"
-	"github.com/nawafswe/orders-service/pkg/v1/usecase"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
@@ -60,7 +60,7 @@ func main() {
 		log.Fatalf("failed to listen on addr:%v\n", lis.Addr())
 	}
 	// register middleware to intercept incoming unary requests
-	srvOpts = append(srvOpts, ordersGrpcService.WithServerUnaryInterceptor())
+	srvOpts = append(srvOpts, grpc2.WithServerUnaryInterceptor())
 	s := grpc.NewServer(srvOpts...)
 
 	dbConn, err := db.InitDB()
@@ -93,9 +93,9 @@ func main() {
 		log.Printf("failed to assert the type of messaging service, expected MessageServiceImpl struct but recived %v\n", reflect.TypeOf(service))
 	}(ps)
 
-	ordersRepo := repo.NewOrderRepo(dbConn)
+	ordersRepo := repo.repo.NewOrderRepo(dbConn)
 	orderUseCase := usecase.NewOrderUseCase(ordersRepo, ps, l)
-	ordersGrpcService.NewOrderService(s, orderUseCase, l)
+	grpc2.NewOrderService(s, orderUseCase, l)
 
 	log.Printf("successfully connected to pub sub client...\n")
 	log.Printf("Server listening at %v", lis.Addr())

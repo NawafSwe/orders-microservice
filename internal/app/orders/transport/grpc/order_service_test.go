@@ -1,12 +1,13 @@
-package grpc_tests
+package grpc_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	odGrpc "github.com/nawafswe/orders-service/internal/app/orders/transport/grpc"
 	"github.com/nawafswe/orders-service/internal/models"
 	ordersMocks "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/v1"
-	orderService "github.com/nawafswe/orders-service/pkg/v1/handler/grpc"
+	"github.com/nawafswe/orders-service/pkg/logger"
 	pb "github.com/nawafswe/orders-service/proto"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
@@ -66,7 +67,7 @@ func TestPlaceOrderService(t *testing.T) {
 	srv := grpc.NewServer()
 	defer srv.Stop()
 	orderUseCase := ordersMocks.NewMockOrderUseCase(t)
-	orderService.NewOrderService(srv, orderUseCase)
+	odGrpc.NewOrderService(srv, orderUseCase, logger.NewLogger())
 	go func() {
 		if err := srv.Serve(lis); err != nil {
 			t.Errorf("could not start a grpc server, err %v\n", err)
@@ -89,7 +90,7 @@ func TestPlaceOrderService(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Logf("=== running %s ===", name)
-			orderUseCase.On("PlaceOrder", mock.Anything, orderService.ToDomain(test.Input)).Return(orderService.ToDomain(test.Input), nil)
+			orderUseCase.On("PlaceOrder", mock.Anything, odGrpc.ToDomain(test.Input)).Return(odGrpc.ToDomain(test.Input), nil)
 			res, err := c.Create(ctx, test.Input)
 			// I need to handle this and return custom err
 			if err == nil && test.ExpectedErr != nil {
@@ -100,7 +101,7 @@ func TestPlaceOrderService(t *testing.T) {
 			}
 
 			orderUseCase.AssertNumberOfCalls(t, "PlaceOrder", 1)
-			orderUseCase.AssertCalled(t, "PlaceOrder", mock.Anything, orderService.ToDomain(test.Input))
+			orderUseCase.AssertCalled(t, "PlaceOrder", mock.Anything, odGrpc.ToDomain(test.Input))
 			orderUseCase.AssertExpectations(t)
 		})
 	}
@@ -115,7 +116,7 @@ func TestSuccessfullyChangeOrderStatusService(t *testing.T) {
 	}
 	srv := grpc.NewServer()
 	defer srv.Stop()
-	orderService.NewOrderService(srv, orderUseCase)
+	odGrpc.NewOrderService(srv, orderUseCase, logger.NewLogger())
 	go func() {
 		if err := srv.Serve(lis); err != nil {
 			t.Errorf("failed to start a grpc server on port %d", port)
@@ -152,7 +153,7 @@ func TestFailChangeOrderStatusServiceDueInvalidOrderId(t *testing.T) {
 	}
 	srv := grpc.NewServer()
 	defer srv.Stop()
-	orderService.NewOrderService(srv, orderUseCase)
+	odGrpc.NewOrderService(srv, orderUseCase, logger.NewLogger())
 	go func() {
 		if err := srv.Serve(lis); err != nil {
 			t.Errorf("failed to start a grpc server on port %d", port)

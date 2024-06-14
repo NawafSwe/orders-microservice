@@ -1,13 +1,13 @@
-package use_case_tests
+package usecase_test
 
 import (
 	"context"
 	"errors"
+	"github.com/nawafswe/orders-service/internal/app/orders/usecase"
 	"github.com/nawafswe/orders-service/internal/models"
 	loggerMock "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/logger"
 	messagesMock "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/messaging"
 	ordersMock "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/v1"
-	useCases "github.com/nawafswe/orders-service/pkg/v1/usecase"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 	"reflect"
@@ -84,7 +84,7 @@ func TestPlaceOrderUseCase(t *testing.T) {
 			pubSubMock := messagesMock.NewMockMessageService(t)
 			ordersRepoMock := ordersMock.NewMockOrderRepo(t)
 			loggerMocks := loggerMock.NewMockLogger(t)
-			ordersUseCase := useCases.NewOrderUseCase(ordersRepoMock, pubSubMock, loggerMocks)
+			ordersUseCase := usecase.NewOrderUseCase(ordersRepoMock, pubSubMock, loggerMocks)
 			// setting up mocks
 			if test.ExpectedErr == nil {
 				newOrder := test.Input
@@ -166,7 +166,7 @@ func TestUpdateOrderStatusUseCase(t *testing.T) {
 			pubSubMock := messagesMock.NewMockMessageService(t)
 			ordersRepoMock := ordersMock.NewMockOrderRepo(t)
 			loggerMocks := loggerMock.NewMockLogger(t)
-			ordersUseCase := useCases.NewOrderUseCase(ordersRepoMock, pubSubMock, loggerMocks)
+			ordersUseCase := usecase.NewOrderUseCase(ordersRepoMock, pubSubMock, loggerMocks)
 			if test.ExpectedErr == nil {
 
 				ordersRepoMock.On("UpdateOrderStatus", mock.Anything, test.Input.OrderId, test.Input.Status).Return(
