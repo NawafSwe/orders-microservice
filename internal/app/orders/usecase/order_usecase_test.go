@@ -8,6 +8,7 @@ import (
 	loggerMock "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/logger"
 	messagesMock "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/messaging"
 	ordersMock "github.com/nawafswe/orders-service/mocks/github.com/nawafswe/orders-service/pkg/v1"
+	"github.com/nawafswe/orders-service/pkg/logger"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 	"reflect"
@@ -83,8 +84,7 @@ func TestPlaceOrderUseCase(t *testing.T) {
 			defer cancel()
 			pubSubMock := messagesMock.NewMockMessageService(t)
 			ordersRepoMock := ordersMock.NewMockOrderRepo(t)
-			loggerMocks := loggerMock.NewMockLogger(t)
-			ordersUseCase := usecase.NewOrderUseCase(ordersRepoMock, pubSubMock, loggerMocks)
+			ordersUseCase := usecase.NewOrderUseCase(ordersRepoMock, pubSubMock, logger.NewLogger())
 			// setting up mocks
 			if test.ExpectedErr == nil {
 				newOrder := test.Input
