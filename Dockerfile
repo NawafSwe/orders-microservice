@@ -1,4 +1,4 @@
-FROM golang:1.22.8 as base
+FROM golang:1.23.3 as base
 LABEL authors="nawaf"
 FROM base as dev
 WORKDIR /src/
